@@ -2,33 +2,20 @@ const $=(s,c=document)=>c.querySelector(s), $$=(s,c=document)=>[...c.querySelect
 
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/* ARETE-style page transitions, with stable logo navigation and loader timing. */
+/* Smooth page-to-page fade. No splash screen or minimum loading delay. */
 const loader = $('.page-loader');
-const loaderStartedAt = performance.now();
-const minimumLoaderTime = reducedMotion ? 0 : 700;
-let loaderHidden = false;
+const transitionKey = 'archi-saff-transition';
 let navigating = false;
-let fallbackTimer;
-let readyTimer;
+let navigationTimer;
 
 function hideLoader() {
-  if (!loader || loaderHidden || navigating) return;
-  loaderHidden = true;
-  clearTimeout(fallbackTimer);
-  clearTimeout(readyTimer);
+  if (!loader) return;
+  document.documentElement.classList.remove('page-transition-entering');
   loader.classList.remove('leaving');
   loader.classList.add('done');
 }
 
-function scheduleLoaderDismissal() {
-  if (loaderHidden || navigating) return;
-  clearTimeout(readyTimer);
-  const remaining = Math.max(0, minimumLoaderTime - (performance.now() - loaderStartedAt));
-  readyTimer = setTimeout(hideLoader, remaining);
-}
-
-/* '/' and '/index.html' are the same page; avoid a reload when the logo is
-   clicked on Home. Allow normal same-page hash navigation. */
+/* Treat '/' and '/index.html' as the same page so the logo does not reload Home. */
 function pageKey(url) {
   const path = url.pathname.endsWith('/index.html')
     ? url.pathname.slice(0, -'index.html'.length)
@@ -37,14 +24,13 @@ function pageKey(url) {
 }
 
 if (loader) {
-  fallbackTimer = setTimeout(hideLoader, 1800);
-  if (document.readyState === 'complete') scheduleLoaderDismissal();
-  else addEventListener('load', scheduleLoaderDismissal, { once: true });
+  // Reveal the destination on the next painted frame, not after a timed splash.
+  requestAnimationFrame(() => requestAnimationFrame(hideLoader));
 
   addEventListener('pageshow', event => {
     if (!event.persisted) return;
     navigating = false;
-    loaderHidden = false;
+    clearTimeout(navigationTimer);
     hideLoader();
   });
 
@@ -62,17 +48,20 @@ if (loader) {
       return;
     }
 
-    // Only animate HTML page changes; leave other resources and destinations alone.
+    // Animate HTML page changes only.
     if (!/\.html?$/i.test(destination.pathname)) return;
 
     event.preventDefault();
     navigating = true;
-    clearTimeout(fallbackTimer);
-    clearTimeout(readyTimer);
-    loaderHidden = false;
     loader.classList.remove('done');
     loader.classList.add('leaving');
-    setTimeout(() => location.assign(destination.href), reducedMotion ? 0 : 450);
+
+    if (!reducedMotion) {
+      try { sessionStorage.setItem(transitionKey, '1'); } catch (_) {}
+    }
+
+    navigationTimer = setTimeout(() => location.assign(destination.href),
+      reducedMotion ? 0 : 450);
   });
 }
 
