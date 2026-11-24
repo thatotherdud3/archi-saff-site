@@ -1,21 +1,57 @@
 const $=(s,c=document)=>c.querySelector(s), $$=(s,c=document)=>[...c.querySelectorAll(s)];
 
-/* ---- page loader (shows on load, and on every internal nav click) ---- */
-const loader=$('.page-loader');
-let hidden=false;
-const hide=()=>{ if(!loader||hidden) return; hidden=true; loader.classList.remove('leaving'); loader.classList.add('done'); };
-addEventListener('load',()=>setTimeout(hide,250),{once:true});
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-document.addEventListener('click', e => {
-  const a = e.target.closest('a[href]');
-  if (!a || !loader || a.target || e.metaKey || e.ctrlKey || e.shiftKey) return;
-  const u = new URL(a.href, location.href);
-  if (u.origin !== location.origin || u.pathname === location.pathname) return;
-  e.preventDefault();
-  hidden = false;
-  loader.classList.remove('done'); loader.classList.add('leaving');
-  setTimeout(() => (location.href = a.href), 450);
-});
+/* ---- ARETE-style page loader and transitions ----
+   A single dismissal path avoids double flashes. Restore from the browser's
+   back/forward cache, and only intercept ordinary internal page navigation. */
+const loader = $('.page-loader');
+let loaderHidden = false;
+let navigating = false;
+let fallbackTimer;
+
+function hideLoader() {
+  if (!loader || loaderHidden || navigating) return;
+  loaderHidden = true;
+  clearTimeout(fallbackTimer);
+  loader.classList.remove('leaving');
+  loader.classList.add('done');
+}
+
+if (loader) {
+  fallbackTimer = setTimeout(hideLoader, 1800);
+  if (document.readyState === 'complete') hideLoader();
+  else addEventListener('load', hideLoader, { once: true });
+
+  addEventListener('pageshow', event => {
+    if (!event.persisted) return;
+    navigating = false;
+    loaderHidden = false;
+    hideLoader();
+  });
+
+  document.addEventListener('click', event => {
+    const link = event.target.closest('a[href]');
+    if (!link || navigating || event.defaultPrevented || event.button !== 0 ||
+        event.metaKey || event.ctrlKey || event.shiftKey || event.altKey ||
+        link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
+
+    const destination = new URL(link.href, location.href);
+    const samePage = destination.pathname === location.pathname &&
+                     destination.search === location.search;
+
+    if (destination.origin !== location.origin || samePage ||
+        !/\.html?$/i.test(destination.pathname)) return;
+
+    event.preventDefault();
+    navigating = true;
+    clearTimeout(fallbackTimer);
+    loaderHidden = false;
+    loader.classList.remove('done');
+    loader.classList.add('leaving');
+    setTimeout(() => location.assign(destination.href), reducedMotion ? 0 : 450);
+  });
+}
 
 /* ---- project filter (Projects page only) ---- */
 $$('.ftabs button').forEach(b=>b.addEventListener('click',()=>{
