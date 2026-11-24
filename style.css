@@ -47,12 +47,28 @@ header{position:sticky;top:0;background:var(--white);z-index:100;border-bottom:1
   transition:opacity .65s ease,visibility 0s linear .65s;
 }
 
-/* Brand stays inside the fade, not on a separate loading screen. */
+/* The wordmark zooms within the existing fade, not a separate splash. */
 .page-loader .transition-mark{
   font:400 clamp(1.2rem,4vw,1.6rem)/1.2 Georgia,serif;
   color:#fff;letter-spacing:.28em;white-space:nowrap;
+  opacity:0;transform:scale(.9);transform-origin:center;
+  transition:transform .65s cubic-bezier(.2,.7,.2,1),opacity .35s ease;
+}
+.page-loader.leaving .transition-mark{
+  opacity:1;
+  animation:transitionZoom .65s cubic-bezier(.2,.7,.2,1) both;
+}
+.page-transition-entering .page-loader .transition-mark{
+  opacity:1;transform:scale(1.04);
+}
+.page-loader.done .transition-mark{
+  opacity:0;transform:scale(1.12);
 }
 .page-loader .transition-mark .w-archi{color:var(--burgundy);font-style:italic;}
+@keyframes transitionZoom{
+  from{opacity:.6;transform:scale(.9);}
+  to{opacity:1;transform:scale(1.04);}
+}
 
 main.page{display:block;padding:0 40px 60px;}
 .reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease;}
