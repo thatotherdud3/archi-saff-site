@@ -2,26 +2,44 @@ const $=(s,c=document)=>c.querySelector(s), $$=(s,c=document)=>[...c.querySelect
 
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/* ---- ARETE-style page loader and transitions ----
-   A single dismissal path avoids double flashes. Restore from the browser's
-   back/forward cache, and only intercept ordinary internal page navigation. */
+/* ARETE-style page transitions, with stable logo navigation and loader timing. */
 const loader = $('.page-loader');
+const loaderStartedAt = performance.now();
+const minimumLoaderTime = reducedMotion ? 0 : 700;
 let loaderHidden = false;
 let navigating = false;
 let fallbackTimer;
+let readyTimer;
 
 function hideLoader() {
   if (!loader || loaderHidden || navigating) return;
   loaderHidden = true;
   clearTimeout(fallbackTimer);
+  clearTimeout(readyTimer);
   loader.classList.remove('leaving');
   loader.classList.add('done');
 }
 
+function scheduleLoaderDismissal() {
+  if (loaderHidden || navigating) return;
+  clearTimeout(readyTimer);
+  const remaining = Math.max(0, minimumLoaderTime - (performance.now() - loaderStartedAt));
+  readyTimer = setTimeout(hideLoader, remaining);
+}
+
+/* '/' and '/index.html' are the same page; avoid a reload when the logo is
+   clicked on Home. Allow normal same-page hash navigation. */
+function pageKey(url) {
+  const path = url.pathname.endsWith('/index.html')
+    ? url.pathname.slice(0, -'index.html'.length)
+    : url.pathname;
+  return path + url.search;
+}
+
 if (loader) {
   fallbackTimer = setTimeout(hideLoader, 1800);
-  if (document.readyState === 'complete') hideLoader();
-  else addEventListener('load', hideLoader, { once: true });
+  if (document.readyState === 'complete') scheduleLoaderDismissal();
+  else addEventListener('load', scheduleLoaderDismissal, { once: true });
 
   addEventListener('pageshow', event => {
     if (!event.persisted) return;
@@ -37,15 +55,20 @@ if (loader) {
         link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
 
     const destination = new URL(link.href, location.href);
-    const samePage = destination.pathname === location.pathname &&
-                     destination.search === location.search;
+    if (destination.origin !== location.origin) return;
 
-    if (destination.origin !== location.origin || samePage ||
-        !/\.html?$/i.test(destination.pathname)) return;
+    if (pageKey(destination) === pageKey(new URL(location.href))) {
+      if (!destination.hash || destination.hash === location.hash) event.preventDefault();
+      return;
+    }
+
+    // Only animate HTML page changes; leave other resources and destinations alone.
+    if (!/\\.html?$/i.test(destination.pathname)) return;
 
     event.preventDefault();
     navigating = true;
     clearTimeout(fallbackTimer);
+    clearTimeout(readyTimer);
     loaderHidden = false;
     loader.classList.remove('done');
     loader.classList.add('leaving');
