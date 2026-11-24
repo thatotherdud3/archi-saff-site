@@ -63,7 +63,7 @@ if (loader) {
     }
 
     // Only animate HTML page changes; leave other resources and destinations alone.
-    if (!/\\.html?$/i.test(destination.pathname)) return;
+    if (!/\.html?$/i.test(destination.pathname)) return;
 
     event.preventDefault();
     navigating = true;
