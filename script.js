@@ -61,7 +61,7 @@ if (loader) {
     }
 
     navigationTimer = setTimeout(() => location.assign(destination.href),
-      reducedMotion ? 0 : 450);
+      reducedMotion ? 0 : 650);
   });
 }
 
