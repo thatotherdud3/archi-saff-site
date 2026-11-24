@@ -30,11 +30,18 @@ header{position:sticky;top:0;background:var(--white);z-index:100;border-bottom:1
 .nav-links a.active{text-decoration:underline;text-underline-offset:6px;}
 .tagline{text-align:right;font-size:.7rem;font-weight:700;line-height:1.4;letter-spacing:.03em;}
 
-.page-loader{position:fixed;inset:0;background:#000;z-index:3000;display:flex;align-items:center;justify-content:center;opacity:1;visibility:visible;transition:opacity .6s ease,visibility 0s linear 0s;}
+/* ARETE-style loading mark and cross-page fade */
+.page-loader{position:fixed;inset:0;background:#000;z-index:3000;display:flex;align-items:center;justify-content:center;opacity:1;visibility:visible;pointer-events:auto;transition:opacity .6s ease,visibility 0s linear 0s;}
+.page-loader span{font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.1rem,4vw,1.5rem);color:#fff;white-space:nowrap;opacity:0;animation:markIn 1.1s ease .1s forwards;}
+.page-loader span .w-archi{color:var(--burgundy);}
 .page-loader.done{opacity:0;visibility:hidden;pointer-events:none;transition:opacity .6s ease,visibility 0s linear .6s;}
 .page-loader.leaving{opacity:1;visibility:visible;transition:opacity .45s ease;}
-.page-loader span{font-family:'Playfair Display',Georgia,serif;font-size:2.6rem;color:#fff;letter-spacing:.55em;}
-.page-loader span .w-archi{color:var(--burgundy);}
+@keyframes markIn{from{opacity:0;letter-spacing:.1em}to{opacity:1;letter-spacing:clamp(.12em,1.4vw,.55em)}}
+@media(prefers-reduced-motion:reduce){
+  .page-loader,.page-loader.done,.page-loader.leaving{transition:none;}
+  .page-loader span{animation:none;opacity:1;letter-spacing:.12em;}
+  .reveal{opacity:1;transform:none;transition:none;}
+}
 
 main.page{display:block;padding:0 40px 60px;}
 .reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease;}
