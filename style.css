@@ -62,11 +62,28 @@ main.page{display:block;padding:0 40px 60px;}
 .foot-band{background:var(--burgundy);color:#fff;padding:60px 40px 40px;}
 .foot-band .wordmark{font-family:var(--serif);font-style:italic;font-weight:500;font-size:3rem;margin-bottom:40px;font-variation-settings:"SOFT" 0,"WONK" 1;}
 .foot-band .wordmark .w-with{font-size:.5em;vertical-align:middle;}
-.foot-bottom{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;border-top:1px solid rgba(255,255,255,.3);padding-top:20px;}
+.foot-bottom{display:flex;flex-direction:column;align-items:stretch;gap:0;}
+.footer-social-links{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;}
 .foot-band .pill{border-color:#fff;}
 .foot-band .pill:hover{background:#fff;color:var(--burgundy);}
-.copy-btn{font-size:.75rem;font-weight:700;letter-spacing:.03em;border:1px solid rgba(255,255,255,.5);padding:8px 16px;border-radius:30px;transition:background .2s;}
-.copy-btn:hover{background:rgba(255,255,255,.15);}
+/* Copyright typography and layout matched to ARETE, with Archi/Saff's palette. */
+.footer-legal{
+  align-self:stretch;
+  width:100%;
+  margin:56px 0 0;
+  padding-top:22px;
+  border-top:1px solid rgba(255,255,255,.28);
+  color:#c8c8c8;
+  font:600 11px/1.6 Helvetica,Arial,sans-serif;
+  letter-spacing:.1em;
+  text-align:left;
+}
+.footer-legal a{color:inherit;font:inherit;letter-spacing:inherit;text-decoration:none;}
+.footer-legal a:hover,.footer-legal a:focus-visible{text-decoration:underline;text-underline-offset:3px;}
+.footer-legal a:focus-visible{outline:2px solid #fff;outline-offset:4px;}
+@media(max-width:600px){
+  .footer-legal{margin-top:34px;font-size:10px;letter-spacing:.06em;}
+}
 
 .page-head{padding-top:50px;display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:end;border-bottom:1px solid #000;padding-bottom:30px;}
 .page-head h1{font-family:'Helvetica Black',Helvetica,Arial,sans-serif;font-weight:900;font-size:5.5rem;line-height:.9;margin:0;}
