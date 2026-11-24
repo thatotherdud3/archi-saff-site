@@ -35,24 +35,24 @@ header{position:sticky;top:0;background:var(--white);z-index:100;border-bottom:1
   position:fixed;inset:0;background:#000;z-index:3000;
   display:flex;align-items:center;justify-content:center;
   opacity:0;visibility:hidden;pointer-events:none;
-  transition:opacity .45s ease,visibility 0s linear .45s;
+  transition:opacity .65s ease,visibility 0s linear .65s;
 }
 .page-loader.leaving,
 .page-transition-entering .page-loader{
   opacity:1;visibility:visible;pointer-events:auto;
-  transition:opacity .45s ease,visibility 0s;
+  transition:opacity .65s ease,visibility 0s;
 }
 .page-loader.done{
   opacity:0;visibility:hidden;pointer-events:none;
-  transition:opacity .45s ease,visibility 0s linear .45s;
+  transition:opacity .65s ease,visibility 0s linear .65s;
 }
 
 /* Brand stays inside the fade, not on a separate loading screen. */
 .page-loader .transition-mark{
-  font:400 clamp(1.2rem,4vw,1.6rem)/1.2 'Playfair Display',Georgia,serif;
+  font:400 clamp(1.2rem,4vw,1.6rem)/1.2 Georgia,serif;
   color:#fff;letter-spacing:.28em;white-space:nowrap;
 }
-.page-loader .transition-mark .w-archi{color:var(--burgundy);}
+.page-loader .transition-mark .w-archi{color:var(--burgundy);font-style:italic;}
 
 main.page{display:block;padding:0 40px 60px;}
 .reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease;}
