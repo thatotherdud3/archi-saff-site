@@ -9,11 +9,17 @@
 <script>
 try {
   const key = 'archi-saff-transition';
-  if (!matchMedia('(prefers-reduced-motion: reduce)').matches &&
-      sessionStorage.getItem(key) === '1') {
-    document.documentElement.classList.add('page-transition-entering');
-  }
+  const startedAt = Number(sessionStorage.getItem(key));
   sessionStorage.removeItem(key);
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches &&
+      startedAt > 0 && Date.now() >= startedAt && Date.now() - startedAt < 8000) {
+    document.documentElement.classList.add('page-transition-entering');
+    // Recover even if the main script fails to load.
+    setTimeout(() => {
+      document.documentElement.classList.remove('page-transition-entering');
+      document.querySelector('.page-loader')?.classList.add('done');
+    }, 2200);
+  }
 } catch (_) {}
 </script>
 <link rel="stylesheet" href="style.css">
