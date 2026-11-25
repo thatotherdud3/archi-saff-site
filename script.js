@@ -89,23 +89,23 @@ if (mobileMenuToggle && navRoot) {
       mobileMenuToggle.focus();
     }
   });
-  $('.primary-nav a', navRoot).forEach(link => link.addEventListener('click', closeMobileMenu));
+  $$('.primary-nav a', navRoot).forEach(link => link.addEventListener('click', closeMobileMenu));
   matchMedia('(min-width: 861px)').addEventListener('change', event => {
     if (event.matches) closeMobileMenu();
   });
 }
 
 /* ---- project filter (Projects page only) ---- */
-$('.ftabs button').forEach(b => {
+$$('.ftabs button').forEach(b => {
   b.setAttribute('aria-pressed', String(b.classList.contains('on')));
   b.addEventListener('click', () => {
-    $('.ftabs button').forEach(x => {
+    $$('.ftabs button').forEach(x => {
       const selected = x === b;
       x.classList.toggle('on', selected);
       x.setAttribute('aria-pressed', String(selected));
     });
     const f = b.dataset.f;
-    $('#projGrid .tile').forEach(t => {
+    $$('#projGrid .tile').forEach(t => {
       t.style.display = f === 'all' || t.dataset.f === f ? '' : 'none';
     });
   });
@@ -158,7 +158,7 @@ document.addEventListener('keydown', event => {
 });
 
 /* ---- magnetic nav/pill links ---- */
-if (matchMedia('(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)').matches) $('.magnet').forEach(el=>{
+if (matchMedia('(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)').matches) $$('.magnet').forEach(el=>{
   el.addEventListener('mousemove',e=>{
     const r=el.getBoundingClientRect();
     const x=(e.clientX-(r.left+r.width/2))*0.3;
