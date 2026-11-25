@@ -291,3 +291,12 @@ main.page{scroll-margin-top:100px;}
 @media(prefers-reduced-motion:reduce){
   .reveal,.reveal.reveal-pending{opacity:1!important;transform:none!important;}
 }
+
+/* Consistent hover and keyboard focus feedback. */
+.logo{transition:opacity .2s ease;}
+.logo:hover{opacity:.78;}
+.quote-band a{transition:color .2s ease,border-color .2s ease;}
+.quote-band a:hover,.quote-band a:focus-visible{color:var(--burgundy);border-color:var(--burgundy);}
+.viewer-close:hover{color:var(--blush);}
+.viewer-close:focus-visible{outline:2px solid #fff;outline-offset:4px;}
+.insp-tile:focus-visible .ph{transform:scale(1.035);filter:grayscale(.2);}
