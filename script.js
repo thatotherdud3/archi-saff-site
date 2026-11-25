@@ -65,12 +65,51 @@ if (loader) {
   });
 }
 
+/* ---- accessible mobile navigation ---- */
+const mobileMenuToggle = $('.mobile-menu-toggle');
+const navRoot = $('.nav');
+if (mobileMenuToggle && navRoot) {
+  const closeMobileMenu = () => {
+    navRoot.classList.remove('menu-open');
+    mobileMenuToggle.setAttribute('aria-expanded', 'false');
+    mobileMenuToggle.setAttribute('aria-label', 'Open menu');
+  };
+  mobileMenuToggle.addEventListener('click', () => {
+    const opening = !navRoot.classList.contains('menu-open');
+    navRoot.classList.toggle('menu-open', opening);
+    mobileMenuToggle.setAttribute('aria-expanded', String(opening));
+    mobileMenuToggle.setAttribute('aria-label', opening ? 'Close menu' : 'Open menu');
+  });
+  document.addEventListener('pointerdown', event => {
+    if (navRoot.classList.contains('menu-open') && !navRoot.contains(event.target)) closeMobileMenu();
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && navRoot.classList.contains('menu-open')) {
+      closeMobileMenu();
+      mobileMenuToggle.focus();
+    }
+  });
+  $('.primary-nav a', navRoot).forEach(link => link.addEventListener('click', closeMobileMenu));
+  matchMedia('(min-width: 861px)').addEventListener('change', event => {
+    if (event.matches) closeMobileMenu();
+  });
+}
+
 /* ---- project filter (Projects page only) ---- */
-$$('.ftabs button').forEach(b=>b.addEventListener('click',()=>{
-  $$('.ftabs button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
-  const f=b.dataset.f;
-  $$('#projGrid .tile').forEach(t=>t.style.display=(f==='all'||t.dataset.f===f)?'':'none');
-}));
+$('.ftabs button').forEach(b => {
+  b.setAttribute('aria-pressed', String(b.classList.contains('on')));
+  b.addEventListener('click', () => {
+    $('.ftabs button').forEach(x => {
+      const selected = x === b;
+      x.classList.toggle('on', selected);
+      x.setAttribute('aria-pressed', String(selected));
+    });
+    const f = b.dataset.f;
+    $('#projGrid .tile').forEach(t => {
+      t.style.display = f === 'all' || t.dataset.f === f ? '' : 'none';
+    });
+  });
+});
 
 /* ---- inspirations data + viewer (Inspirations page only) ---- */
 const inspData=[
@@ -86,28 +125,40 @@ const inspData=[
 const inspGrid=$('#inspGrid');
 if(inspGrid){
   inspData.forEach((d,i)=>{
-    const tile=document.createElement('div');
+    const tile=document.createElement('button');
+    tile.type='button';
     tile.className='insp-tile'; tile.dataset.i=i;
+    tile.setAttribute('aria-label', `View inspiration ${i + 1}: ${d.t}`);
     tile.innerHTML=`<span class="num">0${i+1}</span><div class="ph" data-label="${d.t}"></div>`;
     tile.addEventListener('click',()=>openViewer(i));
     inspGrid.appendChild(tile);
   });
 }
 const viewer=$('#viewer');
+let lastInspirationTile = null;
 function openViewer(i){
   const d=inspData[i];
+  lastInspirationTile = $('.insp-tile[data-i="' + i + '"]');
   $('#viewerNum').textContent='0'+(i+1);
   $('#viewerTitle').textContent=d.t;
   $('#viewerBody').textContent=d.b;
   $('#viewerImg').setAttribute('data-label',d.t);
   viewer.classList.add('on');
-  viewer.scrollIntoView({behavior:'smooth',block:'start'});
+  viewer.scrollIntoView({behavior:reducedMotion ? 'auto' : 'smooth',block:'start'});
+  viewerClose?.focus({preventScroll:true});
 }
 const viewerClose=$('#viewerClose');
-if(viewerClose) viewerClose.addEventListener('click',()=>viewer.classList.remove('on'));
+function closeViewer() {
+  viewer?.classList.remove('on');
+  lastInspirationTile?.focus({preventScroll:true});
+}
+if (viewerClose) viewerClose.addEventListener('click', closeViewer);
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && viewer?.classList.contains('on')) closeViewer();
+});
 
 /* ---- magnetic nav/pill links ---- */
-$$('.magnet').forEach(el=>{
+if (matchMedia('(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)').matches) $('.magnet').forEach(el=>{
   el.addEventListener('mousemove',e=>{
     const r=el.getBoundingClientRect();
     const x=(e.clientX-(r.left+r.width/2))*0.3;
