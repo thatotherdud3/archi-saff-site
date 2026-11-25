@@ -2,20 +2,21 @@ const $=(s,c=document)=>c.querySelector(s), $$=(s,c=document)=>[...c.querySelect
 
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/* Smooth page-to-page fade. No splash screen or minimum loading delay. */
+/* One shared transition across the four static pages. */
 const loader = $('.page-loader');
 const transitionKey = 'archi-saff-transition';
+const fadeDuration = reducedMotion ? 0 : 650;
 let navigating = false;
 let navigationTimer;
+let recoveryTimer;
 
 function hideLoader() {
-  if (!loader) return;
   document.documentElement.classList.remove('page-transition-entering');
+  if (!loader) return;
   loader.classList.remove('leaving');
   loader.classList.add('done');
 }
 
-/* Treat '/' and '/index.html' as the same page so the logo does not reload Home. */
 function pageKey(url) {
   const path = url.pathname.endsWith('/index.html')
     ? url.pathname.slice(0, -'index.html'.length)
@@ -24,14 +25,23 @@ function pageKey(url) {
 }
 
 if (loader) {
-  // Reveal the destination on the next painted frame, not after a timed splash.
-  requestAnimationFrame(() => requestAnimationFrame(hideLoader));
+  // Direct visits show the content straight away. Internal links fade back in.
+  if (document.documentElement.classList.contains('page-transition-entering')) {
+    requestAnimationFrame(() => requestAnimationFrame(hideLoader));
+  } else {
+    hideLoader();
+  }
 
   addEventListener('pageshow', event => {
     if (!event.persisted) return;
     navigating = false;
     clearTimeout(navigationTimer);
+    clearTimeout(recoveryTimer);
     hideLoader();
+  });
+  addEventListener('pagehide', () => {
+    clearTimeout(navigationTimer);
+    clearTimeout(recoveryTimer);
   });
 
   document.addEventListener('click', event => {
@@ -44,26 +54,39 @@ if (loader) {
     if (destination.origin !== location.origin) return;
 
     if (pageKey(destination) === pageKey(new URL(location.href))) {
-      if (!destination.hash || destination.hash === location.hash) event.preventDefault();
+      // Same-page anchors retain native browser behaviour.
+      if (!destination.hash) {
+        event.preventDefault();
+        scrollTo({ top: 0, behavior: reducedMotion ? 'instant' : 'smooth' });
+      }
       return;
     }
 
-    // Animate HTML page changes only.
     if (!/\.html?$/i.test(destination.pathname)) return;
 
     event.preventDefault();
+    if (reducedMotion) {
+      location.assign(destination.href);
+      return;
+    }
+
     navigating = true;
     loader.classList.remove('done');
     loader.classList.add('leaving');
+    try { sessionStorage.setItem(transitionKey, String(Date.now())); } catch (_) {}
 
-    if (!reducedMotion) {
-      try { sessionStorage.setItem(transitionKey, '1'); } catch (_) {}
-    }
-
-    navigationTimer = setTimeout(() => location.assign(destination.href),
-      reducedMotion ? 0 : 650);
+    navigationTimer = setTimeout(() => location.assign(destination.href), fadeDuration);
+    // If navigation fails, never leave a permanent black screen.
+    recoveryTimer = setTimeout(() => {
+      navigating = false;
+      try { sessionStorage.removeItem(transitionKey); } catch (_) {}
+      hideLoader();
+    }, 6500);
   });
 }
+
+/* Placeholder social URLs must not open an empty tab before Saff supplies links. */
+$$('a[href="#"]').forEach(link => link.addEventListener('click', event => event.preventDefault()));
 
 /* ---- accessible mobile navigation ---- */
 const mobileMenuToggle = $('.mobile-menu-toggle');
@@ -90,9 +113,10 @@ if (mobileMenuToggle && navRoot) {
     }
   });
   $$('.primary-nav a', navRoot).forEach(link => link.addEventListener('click', closeMobileMenu));
-  matchMedia('(min-width: 861px)').addEventListener('change', event => {
-    if (event.matches) closeMobileMenu();
-  });
+  const desktopQuery = matchMedia('(min-width: 861px)');
+  const handleBreakpoint = event => { if (event.matches) closeMobileMenu(); };
+  if (desktopQuery.addEventListener) desktopQuery.addEventListener('change', handleBreakpoint);
+  else desktopQuery.addListener(handleBreakpoint);
 }
 
 /* ---- project filter (Projects page only) ---- */
@@ -122,16 +146,13 @@ const inspData=[
   {t:'Threshold',b:'The moment between outside and in — that in-between space says more about a building than its facade does.'},
   {t:'Mass & Void',b:'Solid against empty. This is the proportion study I keep returning to when a design feels too busy.'}
 ];
-const inspGrid=$('#inspGrid');
-if(inspGrid){
-  inspData.forEach((d,i)=>{
-    const tile=document.createElement('button');
-    tile.type='button';
-    tile.className='insp-tile'; tile.dataset.i=i;
-    tile.setAttribute('aria-label', `View inspiration ${i + 1}: ${d.t}`);
-    tile.innerHTML=`<span class="num">0${i+1}</span><div class="ph" data-label="${d.t}"></div>`;
-    tile.addEventListener('click',()=>openViewer(i));
-    inspGrid.appendChild(tile);
+const inspGrid = $('#inspGrid');
+if (inspGrid) {
+  // Tiles live in HTML too, so a script error can never leave an empty archive.
+  $$('.insp-tile', inspGrid).forEach(tile => {
+    const i = Number(tile.dataset.i);
+    if (!Number.isInteger(i) || !inspData[i]) return;
+    tile.addEventListener('click', () => openViewer(i));
   });
 }
 const viewer=$('#viewer');
@@ -144,30 +165,62 @@ function openViewer(i){
   $('#viewerBody').textContent=d.b;
   $('#viewerImg').setAttribute('data-label',d.t);
   viewer.classList.add('on');
-  viewer.scrollIntoView({behavior:reducedMotion ? 'auto' : 'smooth',block:'start'});
+  viewer.scrollIntoView({behavior:reducedMotion ? 'instant' : 'smooth',block:'start'});
   viewerClose?.focus({preventScroll:true});
 }
 const viewerClose=$('#viewerClose');
 function closeViewer() {
   viewer?.classList.remove('on');
   lastInspirationTile?.focus({preventScroll:true});
+  lastInspirationTile?.scrollIntoView({
+    behavior: reducedMotion ? 'instant' : 'smooth',
+    block: 'nearest'
+  });
 }
 if (viewerClose) viewerClose.addEventListener('click', closeViewer);
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape' && viewer?.classList.contains('on')) closeViewer();
 });
 
-/* ---- magnetic nav/pill links ---- */
-if (matchMedia('(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)').matches) $$('.magnet').forEach(el=>{
-  el.addEventListener('mousemove',e=>{
-    const r=el.getBoundingClientRect();
-    const x=(e.clientX-(r.left+r.width/2))*0.3;
-    const y=(e.clientY-(r.top+r.height/2))*0.3;
-    el.style.transform=`translate(${x}px,${y}px)`;
+/* ---- magnetic links, calculated from a fixed starting rectangle ---- */
+if (!reducedMotion && matchMedia('(hover: hover) and (pointer: fine)').matches) {
+  $$('.magnet').forEach(el => {
+    let initialRect = null;
+    const reset = () => {
+      initialRect = null;
+      el.style.removeProperty('--mag-x');
+      el.style.removeProperty('--mag-y');
+    };
+    el.addEventListener('pointerenter', () => { initialRect = el.getBoundingClientRect(); });
+    el.addEventListener('pointermove', event => {
+      if (!initialRect) initialRect = el.getBoundingClientRect();
+      const centreX = initialRect.left + initialRect.width / 2;
+      const centreY = initialRect.top + initialRect.height / 2;
+      const x = Math.max(-7, Math.min(7, (event.clientX - centreX) * .14));
+      const y = Math.max(-6, Math.min(6, (event.clientY - centreY) * .14));
+      el.style.setProperty('--mag-x', x.toFixed(1) + 'px');
+      el.style.setProperty('--mag-y', y.toFixed(1) + 'px');
+    });
+    el.addEventListener('pointerleave', reset);
+    el.addEventListener('pointercancel', reset);
+    el.addEventListener('blur', reset);
   });
-  el.addEventListener('mouseleave',()=>{ el.style.transform='translate(0,0)'; });
-});
+}
 
-/* ---- scroll reveal ---- */
-const io=new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('in'); }),{threshold:.15});
-$$('.reveal').forEach(el=>io.observe(el));
+/* ---- progressive scroll reveal: content is visible if JavaScript fails ---- */
+if (!reducedMotion && 'IntersectionObserver' in window) {
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add('in');
+      observer.unobserve(entry.target);
+    });
+  }, { threshold: .06, rootMargin: '0px 0px -3% 0px' });
+
+  $$('.reveal').forEach(el => {
+    // Don't conceal above-the-fold content while waiting on animation.
+    if (el.getBoundingClientRect().top <= innerHeight * .8) return;
+    el.classList.add('reveal-pending');
+    observer.observe(el);
+  });
+}

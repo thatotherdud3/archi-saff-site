@@ -80,8 +80,10 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--burgundy);outline-o
 }
 
 main.page{display:block;padding:0 40px 60px;}
-.reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease;}
-.reveal.in{opacity:1;transform:none;}
+/* Content stays readable without scripts; only below-fold items are animated. */
+.reveal{opacity:1;transform:none;}
+.reveal.reveal-pending{opacity:0;transform:translateY(20px);transition:opacity .55s ease-out,transform .55s ease-out;}
+.reveal.reveal-pending.in{opacity:1;transform:none;}
 
 .hero{padding-top:60px;position:relative;}
 .hero-sub{font-weight:700;font-size:.8rem;letter-spacing:.04em;color:var(--burgundy);margin-bottom:18px;}
@@ -269,3 +271,32 @@ main.page{display:block;padding:0 40px 60px;}
   .nav .logo{font-size:1.3rem;}
   .nav .logo b{font-size:.88rem;}
 }
+
+/* Polished navigation, pointer feedback and predictable scroll destinations. */
+.magnet{
+  --mag-x:0px;--mag-y:0px;
+  transform:translate3d(var(--mag-x),var(--mag-y),0);
+  transition:transform .2s ease-out,background-color .2s ease,color .2s ease;
+}
+.nav-links a.magnet{transition:transform .2s ease-out,color .2s ease;}
+.nav-links a:hover,.nav-links a:focus-visible{color:var(--burgundy);}
+.nav-links a.active{color:var(--burgundy);}
+.ftabs button{transition:color .18s ease,text-decoration-color .18s ease;}
+.ftabs button:hover,.ftabs button:focus-visible{color:var(--burgundy);}
+.viewer{scroll-margin-top:100px;}
+main.page{scroll-margin-top:100px;}
+@media(max-width:860px){
+  .viewer,main.page{scroll-margin-top:80px;}
+}
+@media(prefers-reduced-motion:reduce){
+  .reveal,.reveal.reveal-pending{opacity:1!important;transform:none!important;}
+}
+
+/* Consistent hover and keyboard focus feedback. */
+.logo{transition:opacity .2s ease;}
+.logo:hover{opacity:.78;}
+.quote-band a{transition:color .2s ease,border-color .2s ease;}
+.quote-band a:hover,.quote-band a:focus-visible{color:var(--burgundy);border-color:var(--burgundy);}
+.viewer-close:hover{color:var(--blush);}
+.viewer-close:focus-visible{outline:2px solid #fff;outline-offset:4px;}
+.insp-tile:focus-visible .ph{transform:scale(1.035);filter:grayscale(.2);}

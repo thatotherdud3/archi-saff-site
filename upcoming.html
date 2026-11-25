@@ -9,14 +9,20 @@
 <script>
 try {
   const key = 'archi-saff-transition';
-  if (!matchMedia('(prefers-reduced-motion: reduce)').matches &&
-      sessionStorage.getItem(key) === '1') {
-    document.documentElement.classList.add('page-transition-entering');
-  }
+  const startedAt = Number(sessionStorage.getItem(key));
   sessionStorage.removeItem(key);
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches &&
+      startedAt > 0 && Date.now() >= startedAt && Date.now() - startedAt < 8000) {
+    document.documentElement.classList.add('page-transition-entering');
+    // Recover even if the main script fails to load.
+    setTimeout(() => {
+      document.documentElement.classList.remove('page-transition-entering');
+      document.querySelector('.page-loader')?.classList.add('done');
+    }, 2200);
+  }
 } catch (_) {}
 </script>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=3">
 <noscript><style>.page-loader{display:none!important}.reveal{opacity:1!important;transform:none!important}.mobile-menu-toggle{display:none!important}@media(max-width:860px){.nav{flex-wrap:wrap}.primary-nav{display:block!important;position:static!important;box-shadow:none!important;width:100%}.nav-links{padding:0!important}}</style></noscript>
 </head>
 <body>
@@ -91,6 +97,6 @@ try {
   </div>
 </div>
 
-<script src="script.js"></script>
+<script src="script.js?v=3"></script>
 </body>
 </html>
