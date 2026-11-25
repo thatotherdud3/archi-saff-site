@@ -259,3 +259,13 @@ main.page{display:block;padding:0 40px 60px;}
   .reveal{opacity:1;transform:none;transition:none;}
   *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important;}
 }
+
+/* Keep the brand centred while the icon stays at the right on mobile. */
+@media(max-width:860px){
+  .nav .logo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);white-space:nowrap;z-index:1;}
+  .nav .mobile-menu-toggle{min-width:44px;margin-left:auto;}
+}
+@media(max-width:360px){
+  .nav .logo{font-size:1.3rem;}
+  .nav .logo b{font-size:.88rem;}
+}
