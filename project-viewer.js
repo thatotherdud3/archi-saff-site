@@ -190,7 +190,14 @@
 
   previous.addEventListener("click", () => changePage(currentPage - 1));
   next.addEventListener("click", () => changePage(currentPage + 1));
-  pageInput.addEventListener("change", () => changePage(Number(pageInput.value)));
+  pageInput.addEventListener("change", () => {
+    const entered = Number(pageInput.value);
+    if (!Number.isFinite(entered) || entered < 1 || entered > totalPages) {
+      updateControls();
+      return;
+    }
+    changePage(entered);
+  });
   zoomOut.addEventListener("click", () => changeZoom(zoom - 25));
   zoomIn.addEventListener("click", () => changeZoom(zoom + 25));
   fitButton.addEventListener("click", () => changeZoom(100));
@@ -302,7 +309,11 @@
       updateControls();
       await renderPage();
     } catch (error) {
-      if (documentHandle) {
+      const message = String(error?.message || error);
+      if (/worker|fake worker/i.test(message)) {
+        // The library may load while its separate worker is blocked.
+        useNativeViewer();
+      } else if (documentHandle) {
         showError("This PDF could not be displayed. Try opening the original file.");
       } else {
         // A missing/invalid PDF must not lead to a blank iframe.
