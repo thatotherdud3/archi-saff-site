@@ -276,9 +276,9 @@ main.page{display:block;padding:0 40px 60px;}
 .magnet{
   --mag-x:0px;--mag-y:0px;
   transform:translate3d(var(--mag-x),var(--mag-y),0);
-  transition:transform .2s ease-out,background-color .2s ease,color .2s ease;
+  transition:transform .18s cubic-bezier(.22,.75,.27,1),background-color .2s ease,color .2s ease;
 }
-.nav-links a.magnet{transition:transform .2s ease-out,color .2s ease;}
+.nav-links a.magnet{transition:transform .18s cubic-bezier(.22,.75,.27,1),color .2s ease;}
 .nav-links a:hover,.nav-links a:focus-visible{color:var(--burgundy);}
 .nav-links a.active{color:var(--burgundy);}
 .ftabs button{transition:color .18s ease,text-decoration-color .18s ease;}
@@ -831,4 +831,26 @@ main.page{padding-left:var(--page-gutter);padding-right:var(--page-gutter);}
   .pdf-document-label{font-size:.64rem;}
   .pdf-pages .pdf-page-input{width:44px;}
   .project-pdf-pending{min-height:120px;}
+}
+
+/* Independent, keyboard-accessible collapse controls for the three project chapters. */
+.project-document-heading .chapter-actions{
+  display:flex;align-items:center;justify-content:flex-end;gap:clamp(12px,2.5vw,32px);
+  flex-wrap:wrap;
+}
+.chapter-toggle{
+  display:inline-flex;align-items:center;justify-content:space-between;gap:13px;
+  min-height:44px;min-width:116px;padding:9px 12px;
+  border:1px solid var(--black);border-radius:0;background:transparent;
+  color:var(--black);font:700 .68rem/1.35 var(--sans);letter-spacing:.07em;
+  cursor:pointer;transition:color .18s ease,border-color .18s ease,background-color .18s ease;
+}
+.chapter-toggle::after{content:"−";font-size:1.2rem;font-weight:400;line-height:1;}
+.chapter-toggle[aria-expanded="false"]::after{content:"+";}
+.chapter-toggle:hover{color:var(--burgundy);border-color:var(--burgundy);}
+.chapter-toggle:focus-visible{outline:2px solid var(--burgundy);outline-offset:3px;}
+.project-document-body[hidden]{display:none!important;}
+@media(max-width:600px){
+  .project-document-heading .chapter-actions{width:100%;justify-content:space-between;gap:10px;}
+  .chapter-toggle{margin-left:auto;min-height:42px;}
 }
