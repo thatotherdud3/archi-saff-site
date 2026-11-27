@@ -58,7 +58,9 @@
       key: "models", number: "03", title: "MODEL PHOTOGRAPHY",
       info: "PHYSICAL MODELS / STUDIES",
       files: project.modelPhotographyPdf ?
-        [{title: "MODEL PHOTOGRAPHY", path: project.modelPhotographyPdf}] : []
+        [typeof project.modelPhotographyPdf === "string"
+          ? {title: "MODEL PHOTOGRAPHY", path: project.modelPhotographyPdf}
+          : project.modelPhotographyPdf] : []
     }
   ];
 
@@ -380,10 +382,8 @@
     const toggle = document.createElement("button");
     toggle.type = "button";
     toggle.className = "chapter-toggle";
-    toggle.setAttribute("aria-expanded", "true");
+    const initiallyExpanded = chapter.key === "design";
     toggle.setAttribute("aria-controls", "chapter-content-" + chapter.key);
-    toggle.setAttribute("aria-label", "Collapse " + chapter.title + " section");
-    toggle.textContent = "COLLAPSE";
     actions.append(meta, toggle);
     header.append(title, actions);
 
@@ -400,12 +400,19 @@
           ? "Model photography will appear here once its separate PDF has been provided."
           : "This document is coming soon.");
     }
+    const setChapterExpanded = expanded => {
+      body.hidden = !expanded;
+      toggle.setAttribute("aria-expanded", String(expanded));
+      toggle.setAttribute("aria-label", (expanded ? "Collapse " : "Expand ") + chapter.title + " section");
+      toggle.textContent = expanded ? "COLLAPSE" : "EXPAND";
+    };
+    setChapterExpanded(initiallyExpanded);
     toggle.addEventListener("click", () => {
-      const expanded = toggle.getAttribute("aria-expanded") === "true";
-      body.hidden = expanded;
-      toggle.setAttribute("aria-expanded", String(!expanded));
-      toggle.setAttribute("aria-label", (expanded ? "Expand " : "Collapse ") + chapter.title + " section");
-      toggle.textContent = expanded ? "EXPAND" : "COLLAPSE";
+      setChapterExpanded(toggle.getAttribute("aria-expanded") !== "true");
+    });
+    // Back/forward cache restores the old DOM; reset to the expected entry state.
+    window.addEventListener("pageshow", event => {
+      if (event.persisted) setChapterExpanded(initiallyExpanded);
     });
     section.append(header, body);
     mount.append(section);

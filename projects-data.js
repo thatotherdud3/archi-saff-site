@@ -9,11 +9,10 @@ window.ArchiSaffProjects = Object.freeze([
     // The first page of this PDF is also the project grid's cover.
     pdf: "assets/pdfs/Archway_Markets_Timber_Shop_Web.pdf",
     journalPdfs: [
-      { title: "DESIGN JOURNAL", path: "assets/pdfs/5123ASA-Saffron Jones-Design Journal.pdf" },
-      { title: "TECHNICAL JOURNAL", path: "assets/pdfs/Tech journal.pdf" }
+      { title: "DESIGN JOURNAL", path: "assets/pdfs/5123ASA-Saffron Jones-Design Journal.pdf" }
     ],
-    // Not yet supplied as a separately identifiable photography PDF.
-    modelPhotographyPdf: null,
+    // Display the supplied technical journal in chapter 03, preserving its true document title.
+    modelPhotographyPdf: { title: "TECHNICAL JOURNAL", path: "assets/pdfs/Tech journal.pdf" },
     demo: false
   },
   {
