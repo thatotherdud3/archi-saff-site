@@ -22,7 +22,7 @@ try {
   }
 } catch (_) {}
 </script>
-<link rel="stylesheet" href="style.css?v=7">
+<link rel="stylesheet" href="style.css?v=9">
 <noscript><style>.page-loader{display:none!important}.reveal{opacity:1!important;transform:none!important}.mobile-menu-toggle{display:none!important}@media(max-width:860px){.nav{flex-wrap:wrap}.primary-nav{display:block!important;position:static!important;box-shadow:none!important;width:100%}.nav-links{padding:0!important}}</style></noscript>
 </head>
 <body>
@@ -67,45 +67,48 @@ try {
   <p class="project-detail-description" id="projectDescription">Project information is loading.</p>
   <p class="pdf-demo-notice" id="pdfDemoNotice" hidden>DEMONSTRATION ONLY — THIS IS A SAMPLE PDF TO SHOW HOW PROJECTS WILL BE PRESENTED.</p>
 
-  <section class="pdf-section" aria-labelledby="pdfSectionTitle">
-    <div class="pdf-section-top">
-      <h2 id="pdfSectionTitle">PROJECT DOCUMENTATION</h2>
-      <span id="pdfDocumentLabel">ARCHITECTURAL PORTFOLIO / PDF</span>
-    </div>
-    <div class="pdf-reader" id="pdfReader">
-      <div class="pdf-toolbar" id="pdfToolbar" hidden>
-        <div class="pdf-toolbar-group pdf-pages">
-          <button type="button" class="pdf-control" id="pdfPrevious" aria-label="Previous page">←</button>
-          <label for="pdfPage">PAGE</label>
-          <input id="pdfPage" type="number" min="1" max="1" value="1" inputmode="numeric" aria-label="PDF page number">
-          <span>/ <span id="pdfPageCount">—</span></span>
-          <button type="button" class="pdf-control" id="pdfNext" aria-label="Next page">→</button>
+  <div class="project-documents" id="projectDocuments" aria-label="Project documents">
+    <p class="project-documents-loading" role="status">PREPARING DOCUMENT SECTIONS…</p>
+  </div>
+
+  <template id="projectPdfTemplate">
+    <article class="pdf-document">
+      <div class="pdf-document-label"></div>
+      <div class="pdf-reader">
+        <div class="pdf-toolbar" hidden>
+          <div class="pdf-toolbar-group pdf-pages">
+            <button type="button" class="pdf-control pdf-previous" aria-label="Previous PDF page">←</button>
+            <label class="pdf-page-label">PAGE <input class="pdf-page-input" type="number" min="1" max="1" value="1" inputmode="numeric" aria-label="PDF page number"></label>
+            <span>/ <span class="pdf-page-count">—</span></span>
+            <button type="button" class="pdf-control pdf-next" aria-label="Next PDF page">→</button>
+          </div>
+          <div class="pdf-toolbar-group pdf-zoom">
+            <button type="button" class="pdf-control pdf-zoom-out" aria-label="Zoom out">−</button>
+            <output class="pdf-zoom-label">100%</output>
+            <button type="button" class="pdf-control pdf-zoom-in" aria-label="Zoom in">+</button>
+            <button type="button" class="pdf-text-control pdf-fit">FIT WIDTH</button>
+          </div>
+          <div class="pdf-toolbar-group pdf-actions">
+            <button type="button" class="pdf-text-control pdf-fullscreen" aria-label="View PDF full screen">FULL SCREEN</button>
+            <a class="pdf-action-link pdf-open" target="_blank" rel="noopener noreferrer">OPEN ↗</a>
+            <a class="pdf-action-link pdf-download">DOWNLOAD ↓</a>
+          </div>
         </div>
-        <div class="pdf-toolbar-group pdf-zoom">
-          <button type="button" class="pdf-control" id="pdfZoomOut" aria-label="Zoom out">−</button>
-          <output id="pdfZoomLabel" aria-live="off">100%</output>
-          <button type="button" class="pdf-control" id="pdfZoomIn" aria-label="Zoom in">+</button>
-          <button type="button" class="pdf-text-control" id="pdfFit">FIT WIDTH</button>
+        <div class="pdf-stage" tabindex="0" aria-label="PDF page viewer" hidden>
+          <div class="pdf-loading" role="status">PREPARING DOCUMENT…</div>
+          <canvas class="pdf-canvas" role="img" aria-label="Current PDF page" hidden></canvas>
+          <iframe class="pdf-native" title="Project PDF" loading="lazy" hidden></iframe>
         </div>
-        <div class="pdf-toolbar-group pdf-actions">
-          <button type="button" class="pdf-text-control" id="pdfFullscreen" aria-label="View full screen">FULL SCREEN</button>
-          <a class="pdf-action-link" id="pdfOpen" target="_blank" rel="noopener noreferrer">OPEN ↗</a>
-          <a class="pdf-action-link" id="pdfDownload">DOWNLOAD ↓</a>
+        <div class="pdf-state" role="status">
+          <span class="index-label">ARCHIVE / DOCUMENT</span>
+          <h3 class="pdf-state-title">DOCUMENT READY</h3>
+          <p class="pdf-state-text">The document will load when you reach this section.</p>
+          <button type="button" class="pdf-load-button">LOAD DOCUMENT ↗</button>
         </div>
       </div>
-      <div class="pdf-stage" id="pdfStage" tabindex="0" aria-label="PDF document viewer" hidden>
-        <div class="pdf-loading" id="pdfLoading" role="status">PREPARING DOCUMENT…</div>
-        <canvas id="pdfCanvas" role="img" aria-label="Current project PDF page" hidden></canvas>
-        <iframe id="pdfNative" title="Project PDF in browser viewer" loading="lazy" hidden></iframe>
-      </div>
-      <div class="pdf-state" id="pdfState" role="status">
-        <span class="index-label">ARCHIVE / DOCUMENT</span>
-        <h3 id="pdfStateTitle">PREPARING PROJECT</h3>
-        <p id="pdfStateText">Project documentation is being prepared.</p>
-      </div>
-    </div>
-    <p class="pdf-reader-help" id="pdfPageAnnouncement" aria-live="polite"></p>
-  </section>
+      <p class="pdf-reader-help" aria-live="polite"></p>
+    </article>
+  </template>
 
   <nav class="project-detail-bottom" aria-label="Project navigation">
     <a href="projects.html">← BACK TO ALL PROJECTS</a>
@@ -128,8 +131,8 @@ try {
 </div>
 
 <script src="script.js?v=3"></script>
-<script src="projects-data.js?v=2"></script>
+<script src="projects-data.js?v=3"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script defer src="project-viewer.js?v=2"></script>
+<script defer src="project-viewer.js?v=3"></script>
 </body>
 </html>
