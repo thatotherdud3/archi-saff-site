@@ -22,7 +22,22 @@ try {
   }
 } catch (_) {}
 </script>
-<link rel="stylesheet" href="style.css?v=10">
+
+<script>
+/* Small editorial fade for navigation into, out of and between projects. */
+try {
+  const key = 'archi-saff-soft-transition';
+  const started = Number(sessionStorage.getItem(key));
+  sessionStorage.removeItem(key);
+  const age = Date.now() - started;
+  if (started > 0 && age >= 0 && age < 6000 &&
+      !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.documentElement.classList.add('soft-page-entering');
+    setTimeout(() => document.documentElement.classList.remove('soft-page-entering'), 700);
+  }
+} catch (_) {}
+</script>
+<link rel="stylesheet" href="style.css?v=15">
 <noscript><style>.page-loader{display:none!important}.reveal{opacity:1!important;transform:none!important}.mobile-menu-toggle{display:none!important}@media(max-width:860px){.nav{flex-wrap:wrap}.primary-nav{display:block!important;position:static!important;box-shadow:none!important;width:100%}.nav-links{padding:0!important}}</style></noscript>
 </head>
 <body>
@@ -121,6 +136,6 @@ try {
   </div>
 </div>
 
-<script src="script.js?v=4"></script>
+<script src="script.js?v=6"></script>
 </body>
 </html>
