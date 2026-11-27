@@ -22,7 +22,7 @@ try {
   }
 } catch (_) {}
 </script>
-<link rel="stylesheet" href="style.css?v=13">
+<link rel="stylesheet" href="style.css?v=14">
 <noscript><style>.page-loader{display:none!important}.reveal{opacity:1!important;transform:none!important}.mobile-menu-toggle{display:none!important}@media(max-width:860px){.nav{flex-wrap:wrap}.primary-nav{display:block!important;position:static!important;box-shadow:none!important;width:100%}.nav-links{padding:0!important}}</style></noscript>
 </head>
 <body>
@@ -98,5 +98,38 @@ try {
 
 <script src="script.js?v=4"></script>
 <script src="https://app.tileset.com/v1/tileset.js" async></script>
+<script>
+/* TileSet renders its grid asynchronously. Mark the photo grid so our
+   mobile-only CSS can show two columns without changing its desktop layout. */
+(() => {
+  const mount = document.querySelector('.tileset-board-shell [data-tileset]');
+  if (!mount) return;
+
+  let observer;
+  const markGrid = () => {
+    for (const node of mount.querySelectorAll('div, ul')) {
+      const style = getComputedStyle(node);
+      if (style.display !== 'grid' && style.display !== 'inline-grid') continue;
+      if (node.children.length < 4) continue;
+
+      // Avoid changing unrelated TileSet controls or toolbar layouts.
+      const imageTiles = Array.from(node.children).filter(child => child.querySelector('img')).length;
+      if (imageTiles < 4) continue;
+
+      node.setAttribute('data-archisaff-photo-grid', '');
+      observer?.disconnect();
+      return true;
+    }
+    return false;
+  };
+
+  observer = new MutationObserver(() => {
+    if (markGrid()) observer.disconnect();
+  });
+  observer.observe(mount, {childList: true, subtree: true});
+  markGrid();
+  window.addEventListener('load', markGrid, {once: true});
+})();
+</script>
 </body>
 </html>
