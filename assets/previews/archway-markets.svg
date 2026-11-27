@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 840" role="img" aria-label="Stylised Archway Markets project cover">
+<rect width="720" height="840" fill="#f8f5f0"/>
+<path d="M40 87H680" stroke="#a79f97" stroke-width="2"/>
+<text x="40" y="54" font-size="33" font-weight="700" font-family="Arial,Helvetica,sans-serif" fill="#6b2f3a">ARCHWAY MARKETS</text>
+<text x="42" y="114" font-size="17" font-family="Arial,Helvetica,sans-serif" fill="#514842">TIMBER SHOP / LIVERPOOL</text>
+<rect x="42" y="164" width="636" height="528" fill="#ebdfce"/>
+<rect x="42" y="570" width="636" height="122" fill="#c7c1b3"/>
+<g fill="none" stroke="#8e6539" stroke-width="29" stroke-linecap="round">
+<path d="M92 566V355C92 251 213 251 213 355V566"/>
+<path d="M242 566V313C242 206 372 206 372 313V566"/>
+<path d="M402 566V357C402 252 528 252 528 357V566"/>
+<path d="M548 566V344C548 267 630 266 630 344V566"/>
+</g>
+<g fill="none" stroke="#d9b883" stroke-width="7" stroke-linecap="round">
+<path d="M92 566V355C92 251 213 251 213 355V566"/>
+<path d="M242 566V313C242 206 372 206 372 313V566"/>
+<path d="M402 566V357C402 252 528 252 528 357V566"/>
+<path d="M548 566V344C548 267 630 266 630 344V566"/>
+</g>
+<g stroke="#ad895e" stroke-width="5" fill="none"><path d="M93 358L243 309 401 354 550 341"/><path d="M213 358L372 313 528 360 630 344"/></g>
+<path d="M42 738H678" stroke="#a79f97" stroke-width="2"/>
+<text x="42" y="773" font-size="15" font-family="Arial,Helvetica,sans-serif" fill="#47433e">ARCHI / SAFF</text>
+<text x="678" y="773" font-size="15" text-anchor="end" font-family="Arial,Helvetica,sans-serif" fill="#47433e">001 / PROJECT</text>
+</svg>
