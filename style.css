@@ -761,3 +761,15 @@ main.page{padding-left:var(--page-gutter);padding-right:var(--page-gutter);}
   .pdf-stage{min-height:350px;max-height:70vh;padding:10px;}
   .pdf-state{min-height:340px;}
 }
+
+/* Real presentation-board cover when generated, with a project-specific art fallback. */
+#projGrid .project-cover{background:#eee8dd;}
+#projGrid .project-cover img{
+  position:absolute;inset:0;display:block;width:100%;height:100%;
+  object-fit:cover;object-position:center;
+}
+#projGrid .project-cover .project-cover-generated{
+  object-position:62% center;
+}
+#projGrid .project-cover .project-cover-generated[hidden]{display:none!important;}
+#projGrid .project-cover::after{z-index:2;}
