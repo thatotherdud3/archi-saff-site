@@ -6,8 +6,15 @@ window.ArchiSaffProjects = Object.freeze([
     id: "archway-markets", number: "001", title: "Archway Markets",
     category: "CULTURAL", location: "LIVERPOOL, UK", year: "TBC",
     description: "Timber Shop is a site-responsive marketplace proposal near St Peter's Tavern on Seel Street in Liverpool. Arched timber construction echoes the existing historic facade, while flexible pop-up stalls and carefully considered natural and artificial lighting support a community market throughout the day and evening. The accompanying technical board explores the glulam structure, materials, an exploded isometric and 1:10 prototype models.",
-    // Saffron's combined two-page presentation boards, optimised for the web.
-    pdf: "assets/pdfs/archway-markets.pdf", demo: false
+    // The first page of this PDF is also the project grid's cover.
+    pdf: "assets/pdfs/Archway_Markets_Timber_Shop_Web.pdf",
+    journalPdfs: [
+      { title: "DESIGN JOURNAL", path: "assets/pdfs/5123ASA-Saffron Jones-Design Journal.pdf" },
+      { title: "TECHNICAL JOURNAL", path: "assets/pdfs/Tech journal.pdf" }
+    ],
+    // Not yet supplied as a separately identifiable photography PDF.
+    modelPhotographyPdf: null,
+    demo: false
   },
   {
     id: "hillside-house", number: "002", title: "Hillside House",

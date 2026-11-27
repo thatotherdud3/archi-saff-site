@@ -1,317 +1,392 @@
-/* Archi/Saff PDF project reader. Progressive enhancement: PDF.js when available,
-   browser PDF iframe fallback when the library cannot load. */
+/* Archi/Saff reusable project document readers.
+   Each document has independent PDF.js controls, lazy loading, and a native PDF fallback. */
 (() => {
   "use strict";
 
   const projects = window.ArchiSaffProjects || [];
-  const $ = selector => document.querySelector(selector);
-  const id = new URLSearchParams(location.search).get("id");
-  const currentIndex = projects.findIndex(item => item.id === id);
-  const project = projects[currentIndex];
-  const reader = $("#pdfReader");
-  if (!reader) return;
+  const projectId = new URLSearchParams(location.search).get("id");
+  const index = projects.findIndex(project => project.id === projectId);
+  const project = projects[index];
+  const mount = document.querySelector("#projectDocuments");
+  const template = document.querySelector("#projectPdfTemplate");
+  if (!mount || !template) return;
 
-  const heading = $("#projectTitle");
-  const number = $("#projectNumber");
-  const category = $("#projectCategory");
-  const locationLabel = $("#projectLocation");
-  const year = $("#projectYear");
-  const description = $("#projectDescription");
-  const demoNotice = $("#pdfDemoNotice");
-  const nextLink = $("#nextProject");
-  const nextName = $("#nextProjectName");
-  const stage = $("#pdfStage");
-  const toolbar = $("#pdfToolbar");
-  const loading = $("#pdfLoading");
-  const state = $("#pdfState");
-  const stateTitle = $("#pdfStateTitle");
-  const stateText = $("#pdfStateText");
-  const canvas = $("#pdfCanvas");
-  const nativeFrame = $("#pdfNative");
-  const previous = $("#pdfPrevious");
-  const next = $("#pdfNext");
-  const pageInput = $("#pdfPage");
-  const pageCount = $("#pdfPageCount");
-  const zoomOut = $("#pdfZoomOut");
-  const zoomIn = $("#pdfZoomIn");
-  const zoomLabel = $("#pdfZoomLabel");
-  const fitButton = $("#pdfFit");
-  const fullscreenButton = $("#pdfFullscreen");
-  const openLink = $("#pdfOpen");
-  const downloadLink = $("#pdfDownload");
-  const documentLabel = $("#pdfDocumentLabel");
-  const pageAnnouncement = $("#pdfPageAnnouncement");
-
-  const setState = (title, detail) => {
-    stage.hidden = true;
-    toolbar.hidden = true;
-    state.hidden = false;
-    stateTitle.textContent = title;
-    stateText.textContent = detail;
-  };
-
-  const safePdfUrl = value => {
-    if (typeof value !== "string" ||
-        !/^assets\/pdfs\/[a-z0-9_-]+\.pdf$/i.test(value)) return null;
-    const url = new URL(value, document.baseURI);
+  const byId = id => document.getElementById(id);
+  const safePdfUrl = path => {
+    if (typeof path !== "string" ||
+        !/^assets\/pdfs\/(?:[a-z0-9._ -]+\/)*[a-z0-9._ -]+\.pdf$/i.test(path) ||
+        path.split("/").some(part => part === "." || part === "..")) return null;
+    const url = new URL(path, document.baseURI);
     return url.origin === location.origin ? url.href : null;
   };
 
   if (!project) {
     document.title = "Project not found — Archi/Saff";
-    heading.textContent = "PROJECT NOT FOUND";
-    description.textContent = "This project is not in the current catalogue.";
-    $("#projectMeta").hidden = true;
-    nextLink.hidden = true;
-    setState("PROJECT NOT FOUND", "Return to Selected Projects to choose a project.");
+    byId("projectTitle").textContent = "PROJECT NOT FOUND";
+    byId("projectDescription").textContent = "Return to Selected Projects to choose a project.";
+    byId("projectMeta").hidden = true;
+    byId("nextProject").hidden = true;
+    mount.innerHTML = '<p class="project-documents-loading">PROJECT NOT FOUND</p>';
     return;
   }
 
   document.title = project.title + " — Archi/Saff";
-  heading.textContent = project.title;
-  number.textContent = project.number;
-  category.textContent = project.category;
-  locationLabel.textContent = project.location;
-  year.textContent = project.year;
-  description.textContent = project.description;
-  demoNotice.hidden = !project.demo;
-  const following = projects[(currentIndex + 1) % projects.length];
-  nextLink.href = "project.html?id=" + encodeURIComponent(following.id);
-  nextName.textContent = following.title;
+  byId("projectTitle").textContent = project.title;
+  byId("projectNumber").textContent = project.number;
+  byId("projectCategory").textContent = project.category;
+  byId("projectLocation").textContent = project.location;
+  byId("projectYear").textContent = project.year;
+  byId("projectDescription").textContent = project.description;
+  byId("pdfDemoNotice").hidden = !project.demo;
 
-  const pdfUrl = safePdfUrl(project.pdf);
-  if (!pdfUrl) {
-    setState("PROJECT PDF COMING SOON",
-      "The portfolio layout is ready. Saffron's PDF will appear here once it has been added.");
+  const following = projects[(index + 1) % projects.length];
+  byId("nextProject").href = "project.html?id=" + encodeURIComponent(following.id);
+  byId("nextProjectName").textContent = following.title;
+
+  const documents = [
+    {
+      key: "design", number: "01", title: "PROJECT DESIGN",
+      info: "PRESENTATION / PROPOSAL",
+      files: project.pdf ? [{title: "PROJECT PRESENTATION", path: project.pdf}] : []
+    },
+    {
+      key: "journal", number: "02", title: "DESIGN & TECHNICAL JOURNAL",
+      info: "RESEARCH / PROCESS / DETAIL",
+      files: Array.isArray(project.journalPdfs) ? project.journalPdfs : []
+    },
+    {
+      key: "models", number: "03", title: "MODEL PHOTOGRAPHY",
+      info: "PHYSICAL MODELS / STUDIES",
+      files: project.modelPhotographyPdf ?
+        [{title: "MODEL PHOTOGRAPHY", path: project.modelPhotographyPdf}] : []
+    }
+  ];
+
+  const showPending = (container, text) => {
+    const pending = document.createElement("div");
+    pending.className = "project-pdf-pending";
+    const copy = document.createElement("p");
+    copy.textContent = text;
+    pending.append(copy);
+    container.append(pending);
+  };
+
+  function createPdfReader(file, key, documentIndex) {
+    const article = template.content.firstElementChild.cloneNode(true);
+    const pick = selector => article.querySelector(selector);
+    const reader = pick(".pdf-reader");
+    const toolbar = pick(".pdf-toolbar");
+    const stage = pick(".pdf-stage");
+    const state = pick(".pdf-state");
+    const stateTitle = pick(".pdf-state-title");
+    const stateText = pick(".pdf-state-text");
+    const loadButton = pick(".pdf-load-button");
+    const loading = pick(".pdf-loading");
+    const canvas = pick(".pdf-canvas");
+    const frame = pick(".pdf-native");
+    const back = pick(".pdf-previous");
+    const forward = pick(".pdf-next");
+    const pageInput = pick(".pdf-page-input");
+    const count = pick(".pdf-page-count");
+    const minus = pick(".pdf-zoom-out");
+    const plus = pick(".pdf-zoom-in");
+    const fit = pick(".pdf-fit");
+    const percentage = pick(".pdf-zoom-label");
+    const fullscreen = pick(".pdf-fullscreen");
+    const open = pick(".pdf-open");
+    const download = pick(".pdf-download");
+    const help = pick(".pdf-reader-help");
+    const label = pick(".pdf-document-label");
+    const name = typeof file.title === "string" ? file.title : "PROJECT PDF";
+    const url = safePdfUrl(file.path);
+    label.textContent = name + " / PDF";
+    frame.title = name + " (browser PDF viewer)";
+    stage.setAttribute("aria-label", name + " pages");
+    canvas.setAttribute("aria-label", name + " — current page");
+    pageInput.setAttribute("aria-label", name + " page number");
+
+    if (!url) {
+      stateTitle.textContent = "DOCUMENT NOT LINKED";
+      stateText.textContent = "The PDF for this document has not been added yet.";
+      loadButton.hidden = true;
+      return article;
+    }
+
+    open.href = url;
+    download.href = url;
+    download.download = (project.id + "-" + key + "-" + (documentIndex + 1) + ".pdf");
+    stateTitle.textContent = "DOCUMENT READY";
+    stateText.textContent = "This PDF loads automatically when it enters view. You can also open it now.";
+
+    let pdf = null;
+    let pageNumber = 1;
+    let total = 0;
+    let zoom = 100;
+    let currentRender = null;
+    let generation = 0;
+    let started = false;
+    let expanded = false;
+    let touchStart = null;
+    let resizeTimer;
+
+    function updateControls() {
+      back.disabled = !pdf || pageNumber <= 1;
+      forward.disabled = !pdf || pageNumber >= total;
+      pageInput.max = String(total || 1);
+      pageInput.value = String(pageNumber);
+      count.textContent = total ? String(total) : "—";
+      percentage.textContent = zoom + "%";
+      minus.disabled = zoom <= 75;
+      plus.disabled = zoom >= 200;
+      help.textContent = total ? "Page " + pageNumber + " of " + total : "";
+    }
+
+    function useNativeViewer(error) {
+      // Enhanced rendering can fail while the PDF remains perfectly readable.
+      ++generation;
+      if (currentRender) currentRender.cancel();
+      currentRender = null;
+      pdf = null;
+      loading.hidden = true;
+      canvas.hidden = true;
+      stage.hidden = false;
+      state.hidden = true;
+      toolbar.hidden = false;
+      frame.hidden = false;
+      if (frame.src !== url) frame.src = url;
+      for (const element of [back, forward, minus, plus, fit, percentage]) {
+        element.hidden = true;
+      }
+      pick(".pdf-pages").hidden = true;
+      help.textContent = "Using your browser's PDF controls. Open or download the original if the preview is unavailable.";
+      if (error) console.warn("Archi/Saff: native PDF fallback for " + name, error);
+    }
+
+    async function draw() {
+      if (!pdf) return;
+      const sequence = ++generation;
+      if (currentRender) {
+        currentRender.cancel();
+        try { await currentRender.promise; } catch (_) { /* Cancellation expected. */ }
+        currentRender = null;
+      }
+      if (sequence !== generation || !pdf) return;
+      loading.hidden = false;
+      canvas.hidden = true;
+      try {
+        const page = await pdf.getPage(pageNumber);
+        if (sequence !== generation || !pdf) return;
+        const original = page.getViewport({scale: 1});
+        const width = Math.max(180, stage.clientWidth - (matchMedia("(max-width: 600px)").matches ? 20 : 48));
+        const viewport = page.getViewport({scale: width / original.width * zoom / 100});
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const scale = Math.min(dpr, Math.sqrt(6500000 / (viewport.width * viewport.height)));
+        canvas.width = Math.max(1, Math.floor(viewport.width * scale));
+        canvas.height = Math.max(1, Math.floor(viewport.height * scale));
+        canvas.style.width = Math.round(viewport.width) + "px";
+        canvas.style.height = Math.round(viewport.height) + "px";
+        const context = canvas.getContext("2d", {alpha: false});
+        if (!context) throw new Error("Canvas unavailable");
+        context.setTransform(scale, 0, 0, scale, 0, 0);
+        currentRender = page.render({canvasContext: context, viewport});
+        await currentRender.promise;
+        if (sequence !== generation || !pdf) return;
+        currentRender = null;
+        loading.hidden = true;
+        canvas.hidden = false;
+        updateControls();
+      } catch (error) {
+        if (sequence !== generation || error?.name === "RenderingCancelledException") return;
+        useNativeViewer(error);
+      }
+    }
+
+    function moveTo(nextPage) {
+      if (!pdf || !Number.isFinite(nextPage)) return;
+      const target = Math.max(1, Math.min(total, Math.round(nextPage)));
+      if (target === pageNumber) return;
+      pageNumber = target;
+      stage.scrollTop = 0;
+      stage.scrollLeft = 0;
+      updateControls();
+      draw();
+    }
+
+    function changeZoom(value) {
+      if (!pdf) return;
+      zoom = Math.max(75, Math.min(200, value));
+      updateControls();
+      draw();
+    }
+
+    async function load() {
+      if (started) return;
+      started = true;
+      state.hidden = true;
+      stage.hidden = false;
+      loading.hidden = false;
+      toolbar.hidden = false;
+      updateControls();
+      if (!window.pdfjsLib) {
+        useNativeViewer();
+        return;
+      }
+      try {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+          "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+        const task = window.pdfjsLib.getDocument({url});
+        pdf = await task.promise;
+        total = pdf.numPages;
+        if (!total) throw new Error("PDF has no pages");
+        updateControls();
+        await draw();
+      } catch (error) {
+        useNativeViewer(error);
+      }
+    }
+
+    loadButton.addEventListener("click", load);
+    back.addEventListener("click", () => moveTo(pageNumber - 1));
+    forward.addEventListener("click", () => moveTo(pageNumber + 1));
+    pageInput.addEventListener("change", () => {
+      const entered = Number(pageInput.value);
+      if (!Number.isFinite(entered) || entered < 1 || entered > total) {
+        updateControls();
+      } else {
+        moveTo(entered);
+      }
+    });
+    minus.addEventListener("click", () => changeZoom(zoom - 25));
+    plus.addEventListener("click", () => changeZoom(zoom + 25));
+    fit.addEventListener("click", () => changeZoom(100));
+
+    const updateFullscreen = () => {
+      const active = expanded || document.fullscreenElement === reader;
+      fullscreen.textContent = active ? "EXIT FULL SCREEN" : "FULL SCREEN";
+      fullscreen.setAttribute("aria-label", active ? "Exit PDF full screen" : "View PDF full screen");
+    };
+
+    fullscreen.addEventListener("click", async () => {
+      if (document.fullscreenElement === reader) {
+        await document.exitFullscreen();
+        return;
+      }
+      if (expanded) {
+        expanded = false;
+        reader.classList.remove("pdf-reader-expanded");
+        document.body.classList.remove("pdf-reader-open");
+        updateFullscreen();
+        if (pdf) draw();
+        return;
+      }
+      if (reader.requestFullscreen) {
+        try {
+          await reader.requestFullscreen();
+          updateFullscreen();
+          if (pdf) draw();
+          return;
+        } catch (_) { /* In-page expansion for browsers without fullscreen. */ }
+      }
+      expanded = true;
+      reader.classList.add("pdf-reader-expanded");
+      document.body.classList.add("pdf-reader-open");
+      updateFullscreen();
+      if (pdf) draw();
+    });
+
+    document.addEventListener("fullscreenchange", () => {
+      if (document.fullscreenElement === reader || !document.fullscreenElement) {
+        updateFullscreen();
+        if (pdf && started) draw();
+      }
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && expanded) {
+        expanded = false;
+        reader.classList.remove("pdf-reader-expanded");
+        document.body.classList.remove("pdf-reader-open");
+        updateFullscreen();
+        if (pdf) draw();
+      }
+    });
+    stage.addEventListener("keydown", event => {
+      if (event.key === "ArrowRight" || event.key === "PageDown") {
+        event.preventDefault();
+        moveTo(pageNumber + 1);
+      } else if (event.key === "ArrowLeft" || event.key === "PageUp") {
+        event.preventDefault();
+        moveTo(pageNumber - 1);
+      }
+    });
+    stage.addEventListener("touchstart", event => {
+      if (zoom !== 100 || event.touches.length !== 1) return;
+      touchStart = {x: event.touches[0].clientX, y: event.touches[0].clientY};
+    }, {passive: true});
+    stage.addEventListener("touchend", event => {
+      if (!touchStart || zoom !== 100 || !event.changedTouches.length) return;
+      const dx = event.changedTouches[0].clientX - touchStart.x;
+      const dy = event.changedTouches[0].clientY - touchStart.y;
+      touchStart = null;
+      if (Math.abs(dx) >= 70 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        moveTo(pageNumber + (dx < 0 ? 1 : -1));
+      }
+    }, {passive: true});
+    window.addEventListener("resize", () => {
+      if (!pdf || zoom !== 100) return;
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(draw, 160);
+    });
+
+    if ("IntersectionObserver" in window) {
+      const observer = new IntersectionObserver((entries, observe) => {
+        if (entries.some(entry => entry.isIntersecting)) {
+          observe.disconnect();
+          load();
+        }
+      }, {rootMargin: "300px 0px"});
+      observer.observe(article);
+    }
+    return article;
+  }
+
+  mount.replaceChildren();
+  const hasFiles = documents.some(section => section.files.length);
+  if (!hasFiles) {
+    const section = document.createElement("section");
+    section.className = "project-document-section";
+    section.innerHTML = '<div class="project-document-heading"><h2>PROJECT DOCUMENTATION</h2></div>';
+    showPending(section, "Project documents will appear here once Saffron has provided them.");
+    mount.append(section);
     return;
   }
 
-  openLink.href = pdfUrl;
-  downloadLink.href = pdfUrl;
-  downloadLink.download = project.id + ".pdf";
-  documentLabel.textContent = project.demo ? "DEMONSTRATION PDF" : "PROJECT PDF";
-  state.hidden = true;
-  stage.hidden = false;
-  loading.hidden = false;
-  toolbar.hidden = false;
-
-  let documentHandle = null;
-  let currentPage = 1;
-  let totalPages = 0;
-  let zoom = 100;
-  let activeRender = null;
-  let requestId = 0;
-  let expanded = false;
-  let touchStart = null;
-
-  const updateControls = () => {
-    previous.disabled = currentPage <= 1;
-    next.disabled = currentPage >= totalPages;
-    pageInput.max = String(totalPages || 1);
-    pageInput.value = String(currentPage);
-    pageCount.textContent = String(totalPages || "–");
-    zoomLabel.textContent = zoom + "%";
-    zoomOut.disabled = zoom <= 75;
-    zoomIn.disabled = zoom >= 200;
-    pageAnnouncement.textContent = totalPages
-      ? "Page " + currentPage + " of " + totalPages
-      : "";
-  };
-
-  const fitScale = pageWidth => {
-    const availableWidth = Math.max(160, stage.clientWidth - 48);
-    return availableWidth / pageWidth;
-  };
-
-  async function renderPage() {
-    if (!documentHandle) return;
-    const thisRequest = ++requestId;
-    if (activeRender) {
-      activeRender.cancel();
-      try { await activeRender.promise; } catch (_) { /* Expected on cancel. */ }
+  for (const chapter of documents) {
+    const section = document.createElement("section");
+    section.className = "project-document-section";
+    section.setAttribute("aria-labelledby", "chapter-" + chapter.key);
+    const header = document.createElement("div");
+    header.className = "project-document-heading";
+    const title = document.createElement("h2");
+    title.id = "chapter-" + chapter.key;
+    const number = document.createElement("span");
+    number.className = "chapter-number";
+    number.textContent = chapter.number + " /";
+    title.append(number, document.createTextNode(chapter.title));
+    const meta = document.createElement("span");
+    meta.className = "chapter-meta";
+    meta.textContent = chapter.info;
+    header.append(title, meta);
+    section.append(header);
+    if (chapter.files.length) {
+      chapter.files.forEach((file, fileIndex) => {
+        section.append(createPdfReader(file, chapter.key, fileIndex));
+      });
+    } else {
+      showPending(section,
+        chapter.key === "models"
+          ? "Model photography will appear here once its separate PDF has been provided."
+          : "This document is coming soon.");
     }
-    loading.hidden = false;
-    canvas.hidden = true;
-    try {
-      const page = await documentHandle.getPage(currentPage);
-      if (thisRequest !== requestId) return;
-      const normal = page.getViewport({scale: 1});
-      const viewport = page.getViewport({scale: fitScale(normal.width) * zoom / 100});
-      const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
-      // Cap rendered pixels to avoid memory spikes on older mobile phones.
-      const maxPixels = 6500000;
-      const renderRatio = Math.min(pixelRatio,
-        Math.sqrt(maxPixels / (viewport.width * viewport.height)));
-      canvas.width = Math.max(1, Math.floor(viewport.width * renderRatio));
-      canvas.height = Math.max(1, Math.floor(viewport.height * renderRatio));
-      canvas.style.width = Math.round(viewport.width) + "px";
-      canvas.style.height = Math.round(viewport.height) + "px";
-      const context = canvas.getContext("2d", { alpha: false });
-      context.setTransform(renderRatio, 0, 0, renderRatio, 0, 0);
-      activeRender = page.render({canvasContext: context, viewport});
-      await activeRender.promise;
-      if (thisRequest !== requestId) return;
-      loading.hidden = true;
-      canvas.hidden = false;
-      updateControls();
-    } catch (error) {
-      if (thisRequest !== requestId || error?.name === "RenderingCancelledException") return;
-      useNativeViewer();
-    }
+    mount.append(section);
   }
-
-  function changePage(page) {
-    if (!documentHandle || !Number.isFinite(page)) return;
-    const limited = Math.max(1, Math.min(totalPages, Math.round(page)));
-    if (limited === currentPage) return;
-    currentPage = limited;
-    stage.scrollTop = 0;
-    stage.scrollLeft = 0;
-    updateControls();
-    renderPage();
-  }
-
-  function changeZoom(amount) {
-    if (!documentHandle) return;
-    zoom = Math.max(75, Math.min(200, amount));
-    updateControls();
-    renderPage();
-  }
-
-  previous.addEventListener("click", () => changePage(currentPage - 1));
-  next.addEventListener("click", () => changePage(currentPage + 1));
-  pageInput.addEventListener("change", () => {
-    const entered = Number(pageInput.value);
-    if (!Number.isFinite(entered) || entered < 1 || entered > totalPages) {
-      updateControls();
-      return;
-    }
-    changePage(entered);
-  });
-  zoomOut.addEventListener("click", () => changeZoom(zoom - 25));
-  zoomIn.addEventListener("click", () => changeZoom(zoom + 25));
-  fitButton.addEventListener("click", () => changeZoom(100));
-
-  const updateFullscreenLabel = () => {
-    const active = expanded || document.fullscreenElement === reader;
-    fullscreenButton.setAttribute("aria-label", active ? "Exit full screen" : "View full screen");
-    fullscreenButton.textContent = active ? "EXIT FULL SCREEN" : "FULL SCREEN";
-  };
-
-  fullscreenButton.addEventListener("click", async () => {
-    if (document.fullscreenElement === reader) {
-      await document.exitFullscreen();
-      return;
-    }
-    if (expanded) {
-      expanded = false;
-      reader.classList.remove("pdf-reader-expanded");
-      document.body.classList.remove("pdf-reader-open");
-      updateFullscreenLabel();
-      renderPage();
-      return;
-    }
-    if (reader.requestFullscreen) {
-      try {
-        await reader.requestFullscreen();
-        updateFullscreenLabel();
-        renderPage();
-        return;
-      } catch (_) { /* iOS and some browsers do not support element fullscreen. */ }
-    }
-    expanded = true;
-    reader.classList.add("pdf-reader-expanded");
-    document.body.classList.add("pdf-reader-open");
-    updateFullscreenLabel();
-    renderPage();
-  });
-  document.addEventListener("fullscreenchange", () => {
-    updateFullscreenLabel();
-    renderPage();
-  });
-  document.addEventListener("keydown", event => {
-    if (event.key === "Escape" && expanded) {
-      expanded = false;
-      reader.classList.remove("pdf-reader-expanded");
-      document.body.classList.remove("pdf-reader-open");
-      updateFullscreenLabel();
-      renderPage();
-    }
-    if (event.target.closest("input,button,a,select,textarea")) return;
-    if (event.target !== stage && !reader.contains(document.activeElement)) return;
-    if (event.key === "ArrowRight" || event.key === "PageDown") {
-      event.preventDefault();
-      changePage(currentPage + 1);
-    } else if (event.key === "ArrowLeft" || event.key === "PageUp") {
-      event.preventDefault();
-      changePage(currentPage - 1);
-    }
-  });
-
-  stage.addEventListener("touchstart", event => {
-    if (zoom !== 100 || event.touches.length !== 1) return;
-    touchStart = { x: event.touches[0].clientX, y: event.touches[0].clientY };
-  }, {passive: true});
-  stage.addEventListener("touchend", event => {
-    if (!touchStart || zoom !== 100 || !event.changedTouches.length) return;
-    const dx = event.changedTouches[0].clientX - touchStart.x;
-    const dy = event.changedTouches[0].clientY - touchStart.y;
-    touchStart = null;
-    if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
-    changePage(currentPage + (dx < 0 ? 1 : -1));
-  }, {passive: true});
-
-  let resizeTimer;
-  window.addEventListener("resize", () => {
-    if (!documentHandle || zoom !== 100) return;
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(renderPage, 160);
-  });
-
-  const useNativeViewer = () => {
-    // Keep the document visible if PDF.js, its worker, or canvas rendering fails.
-    ++requestId;
-    documentHandle = null;
-    state.hidden = true;
-    stage.hidden = false;
-    toolbar.hidden = false;
-    loading.hidden = true;
-    canvas.hidden = true;
-    nativeFrame.hidden = false;
-    nativeFrame.src = pdfUrl;
-    // Browser-native viewers have their own paging and zoom controls.
-    previous.hidden = true;
-    next.hidden = true;
-    pageInput.closest(".pdf-pages").hidden = true;
-    zoomOut.hidden = true;
-    zoomIn.hidden = true;
-    zoomLabel.hidden = true;
-    fitButton.hidden = true;
-    stage.setAttribute("aria-label", "PDF displayed in the browser's built-in viewer");
-    pageAnnouncement.textContent = "Using your browser's PDF viewer. Its built-in controls handle pages and zoom.";
-  };
-
-  async function initialise() {
-    if (!window.pdfjsLib) {
-      useNativeViewer();
-      return;
-    }
-    try {
-      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-      const task = window.pdfjsLib.getDocument({url: pdfUrl});
-      documentHandle = await task.promise;
-      totalPages = documentHandle.numPages;
-      if (!totalPages) throw new Error("PDF has no pages");
-      updateControls();
-      await renderPage();
-    } catch (error) {
-      // An enhanced-renderer error does not mean the PDF is unavailable.
-      // The original file already has a direct OPEN and DOWNLOAD link.
-      useNativeViewer();
-      console.warn("Archi/Saff PDF.js unavailable; using native PDF viewer.", error);
-    }
-  }
-
-  initialise();
 })();
