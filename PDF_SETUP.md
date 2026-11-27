@@ -1,18 +1,37 @@
-# Adding Saffron's PDF projects
+# Adding Saffron's project documents
 
-The Projects page is already linked to a reusable project viewer. No new HTML page is needed per project.
+The Projects grid opens a shared project page. Each project can show three chapters:
 
-1. Add each exported project PDF to `assets/pdfs/` (e.g. `assets/pdfs/hillside-house.pdf`). Keep filenames short and use lowercase letters, digits and hyphens.
-2. Open `projects-data.js`. Find the matching project entry and change `pdf: null` to `pdf: "assets/pdfs/hillside-house.pdf"`.
-3. Replace its placeholder `title`, `category`, `location`, `year` and `description` when Saffron supplies final content.
-4. **Archway Markets / Timber Shop** is already entered as project `001`. Its optimised two-page PDF is now uploaded and linked as `assets/pdfs/archway-markets.pdf` in `projects-data.js`. The demo PDF remains in the repo for reference but is no longer linked to a project. The project year is deliberately marked TBC pending confirmation.
-5. Open `projects.html`, select the card and verify page count, zoom, next/previous, fullscreen, open and download on desktop and mobile.
+1. **Project Design** — one PDF containing the presentation and its chosen first-page cover.
+2. **Design & Technical Journal** — one or more separate journal PDFs.
+3. **Model Photography** — a separate PDF when available.
 
-The PDF viewer uses a pinned PDF.js CDN script to render documents into a canvas, and falls back to the browser's built-in PDF viewer if the library is unavailable. PDFs are only loaded when a visitor opens a project page, not on the grid page. If a project's `pdf` is `null`, a clean coming-soon state appears instead.
+Edit `projects-data.js` for each project. Set `pdf` to its design presentation, `journalPdfs` to an array of journal PDFs (title and path), and `modelPhotographyPdf` to the photography PDF path or `null` until it is ready. The project title, description, location, year and category also live here. These fields will eventually move into WordPress/Elementor rather than requiring code edits.
 
-### File and deployment notes
+Example:
 
-- Commit PDFs to this static site's `assets/pdfs` folder. Avoid very large PDFs; optimise/compress them for web delivery before publishing. GitHub imposes repository file limits.
-- Test the site through its deployed URL or a local HTTP server (not `file://`). The viewer expects same-origin PDFs in the assets folder.
-- Never link confidential project documents here: files published in the public website are accessible and downloadable.
-- This is a public **viewer**, not an upload dashboard. Replacing PDFs is currently a repository update; a future WordPress CMS can manage the same data model.
+```js
+pdf: "assets/pdfs/my-project/project-design.pdf",
+journalPdfs: [
+  { title: "DESIGN JOURNAL", path: "assets/pdfs/my-project/design-journal.pdf" },
+  { title: "TECHNICAL JOURNAL", path: "assets/pdfs/my-project/technical-journal.pdf" }
+],
+modelPhotographyPdf: "assets/pdfs/my-project/model-photography.pdf"
+```
+
+Keep PDF paths relative to the website, in `assets/pdfs/` (subfolders are supported), with filenames matching the repository exactly. Rename new uploads to short, lowercase, hyphenated names where possible. The viewer supports existing file names containing spaces as well.
+
+### Archway Markets
+
+- Project Design: `assets/pdfs/Archway_Markets_Timber_Shop_Web.pdf` — live
+- Design Journal: `assets/pdfs/5123ASA-Saffron Jones-Design Journal.pdf` — live
+- Technical Journal: `assets/pdfs/Tech journal.pdf` — live
+- Model Photography: not linked yet. The newly uploaded file is titled *Tech Journal*, so it is displayed as a journal rather than mislabelled as a separate photography collection. Set `modelPhotographyPdf` when a distinct photography PDF is identified.
+
+The Projects grid cover is generated **only from the first page of the main project design PDF**, never from journals. Keep cover content away from document edges. The generated card image is stored in `assets/previews/<project-id>.jpg`.
+
+All viewers load lazily as visitors scroll down, with their own page navigation, zoom, fullscreen, open and download actions. If PDF.js fails, an inline browser PDF viewer is used. Large PDFs (the current journals are roughly 30 MB each) may load slowly on mobile; compress them before launch if possible.
+
+### Publishing
+
+The PDFs are publicly accessible. Test through the deployed site or a local HTTP server, not `file://`, and only upload content Saffron is happy to publish. No upload dashboard exists in this static build. The future WordPress implementation should use custom fields or an Elementor-compatible project template with three file groups.
