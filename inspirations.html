@@ -22,7 +22,7 @@ try {
   }
 } catch (_) {}
 </script>
-<link rel="stylesheet" href="style.css?v=10">
+<link rel="stylesheet" href="style.css?v=11">
 <noscript><style>.page-loader{display:none!important}.reveal{opacity:1!important;transform:none!important}.mobile-menu-toggle{display:none!important}@media(max-width:860px){.nav{flex-wrap:wrap}.primary-nav{display:block!important;position:static!important;box-shadow:none!important;width:100%}.nav-links{padding:0!important}}</style></noscript>
 </head>
 <body>
@@ -56,31 +56,33 @@ try {
     <p>FRAGMENTS, MATERIALS, PROPORTIONS, AND ATMOSPHERES COLLECTED THROUGH FIELDWORK.</p>
   </div>
   <div class="filters">
-    <div class="flabel">ARCHIVE / 2020—2025</div>
-    <div class="flabel">08 OBJECTS ON VIEW</div>
-    <div class="flabel">ORDER: CHRONOLOGICAL</div>
+    <div class="flabel">ARCHIVE / PINTEREST</div>
+    <div class="flabel">LIVE BOARD / AESTETIC</div>
+    <div class="flabel">REFERENCE / ONGOING</div>
   </div>
 
-  <div class="viewer" id="viewer" role="region" aria-label="Inspiration details">
-    <div class="viewer-img"><div class="ph" id="viewerImg" data-label="Inspiration"></div></div>
-    <div class="viewer-text">
-      <div class="vnum" id="viewerNum">01</div>
-      <h3 id="viewerTitle">Weight &amp; Shadow</h3>
-      <p id="viewerBody">I keep coming back to this one for how the light carves the concrete into something almost soft. It's a reminder that heaviness and warmth aren't opposites.</p>
-      <button class="viewer-close" id="viewerClose">CLOSE ✕</button>
+  <section class="pinterest-archive" aria-label="Live Pinterest inspiration board">
+    <div class="pinterest-archive-intro">
+      <div>
+        <span class="index-label">01 / COLLECTED REFERENCES</span>
+        <h2>AN ONGOING <em>COLLECTION.</em></h2>
+      </div>
+      <p>A living collection of spaces, materials and moods. New references appear here as they are saved to Pinterest.</p>
     </div>
-  </div>
 
-  <div class="insp-strip" id="inspGrid">
-    <button type="button" class="insp-tile" data-i="0" aria-label="View inspiration 1: Weight &amp; Shadow"><span class="num">01</span><span class="ph" data-label="Weight &amp; Shadow"></span></button>
-    <button type="button" class="insp-tile" data-i="1" aria-label="View inspiration 2: Curved Volume"><span class="num">02</span><span class="ph" data-label="Curved Volume"></span></button>
-    <button type="button" class="insp-tile" data-i="2" aria-label="View inspiration 3: Layered Form"><span class="num">03</span><span class="ph" data-label="Layered Form"></span></button>
-    <button type="button" class="insp-tile" data-i="3" aria-label="View inspiration 4: Light on White"><span class="num">04</span><span class="ph" data-label="Light on White"></span></button>
-    <button type="button" class="insp-tile" data-i="4" aria-label="View inspiration 5: Raw Texture"><span class="num">05</span><span class="ph" data-label="Raw Texture"></span></button>
-    <button type="button" class="insp-tile" data-i="5" aria-label="View inspiration 6: Quiet Corner"><span class="num">06</span><span class="ph" data-label="Quiet Corner"></span></button>
-    <button type="button" class="insp-tile" data-i="6" aria-label="View inspiration 7: Threshold"><span class="num">07</span><span class="ph" data-label="Threshold"></span></button>
-    <button type="button" class="insp-tile" data-i="7" aria-label="View inspiration 8: Mass &amp; Void"><span class="num">08</span><span class="ph" data-label="Mass &amp; Void"></span></button>
-  </div>
+    <!-- Temporary test board. Replace both URLs below when Saffron shares her public board. -->
+    <div class="pinterest-board-shell">
+      <a data-pin-do="embedBoard"
+         data-pin-scale-height="720"
+         data-pin-scale-width="170"
+         href="https://www.pinterest.com/Thatotherdud3/aestetic/"></a>
+    </div>
+    <div class="pinterest-archive-footer">
+      <p>TEST FEED / THATOTHERDUD3 — SAFFRON'S BOARD WILL REPLACE THIS ONE.</p>
+      <a class="pinterest-board-link magnet" href="https://www.pinterest.com/Thatotherdud3/aestetic/" target="_blank" rel="noopener noreferrer">VIEW FULL BOARD ON PINTEREST ↗</a>
+    </div>
+  </section>
+
 </main>
 
 <div class="foot-band">
@@ -98,5 +100,6 @@ try {
 </div>
 
 <script src="script.js?v=4"></script>
+<script async defer src="https://assets.pinterest.com/js/pinit.js"></script>
 </body>
 </html>
