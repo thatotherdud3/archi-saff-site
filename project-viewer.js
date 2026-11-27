@@ -156,7 +156,7 @@
       updateControls();
     } catch (error) {
       if (thisRequest !== requestId || error?.name === "RenderingCancelledException") return;
-      showError("This page could not be rendered. Try opening the original PDF instead.");
+      useNativeViewer();
     }
   }
 
@@ -279,6 +279,10 @@
   });
 
   const useNativeViewer = () => {
+    // Keep the document visible if PDF.js, its worker, or canvas rendering fails.
+    state.hidden = true;
+    stage.hidden = false;
+    toolbar.hidden = false;
     loading.hidden = true;
     canvas.hidden = true;
     nativeFrame.hidden = false;
@@ -292,6 +296,7 @@
     zoomLabel.hidden = true;
     fitButton.hidden = true;
     stage.setAttribute("aria-label", "PDF displayed in the browser's built-in viewer");
+    pageAnnouncement.textContent = "Using your browser's PDF viewer. Its built-in controls handle pages and zoom.";
   };
 
   async function initialise() {
@@ -309,17 +314,10 @@
       updateControls();
       await renderPage();
     } catch (error) {
-      const message = String(error?.message || error);
-      if (/worker|fake worker/i.test(message)) {
-        // The library may load while its separate worker is blocked.
-        useNativeViewer();
-      } else if (documentHandle) {
-        showError("This PDF could not be displayed. Try opening the original file.");
-      } else {
-        // A missing/invalid PDF must not lead to a blank iframe.
-        showError("The document could not be loaded. Check its filename and try again.");
-      }
-      console.error("Archi/Saff PDF viewer:", error);
+      // An enhanced-renderer error does not mean the PDF is unavailable.
+      // The original file already has a direct OPEN and DOWNLOAD link.
+      useNativeViewer();
+      console.warn("Archi/Saff PDF.js unavailable; using native PDF viewer.", error);
     }
   }
 
