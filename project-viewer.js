@@ -383,17 +383,13 @@
     toggle.type = "button";
     toggle.className = "chapter-toggle";
     const initiallyExpanded = chapter.key === "design";
-    toggle.setAttribute("aria-expanded", String(initiallyExpanded));
     toggle.setAttribute("aria-controls", "chapter-content-" + chapter.key);
-    toggle.setAttribute("aria-label", (initiallyExpanded ? "Collapse " : "Expand ") + chapter.title + " section");
-    toggle.textContent = initiallyExpanded ? "COLLAPSE" : "EXPAND";
     actions.append(meta, toggle);
     header.append(title, actions);
 
     const body = document.createElement("div");
     body.className = "project-document-body";
     body.id = "chapter-content-" + chapter.key;
-    body.hidden = !initiallyExpanded;
     if (chapter.files.length) {
       chapter.files.forEach((file, fileIndex) => {
         body.append(createPdfReader(file, chapter.key, fileIndex));
@@ -404,12 +400,19 @@
           ? "Model photography will appear here once its separate PDF has been provided."
           : "This document is coming soon.");
     }
+    const setChapterExpanded = expanded => {
+      body.hidden = !expanded;
+      toggle.setAttribute("aria-expanded", String(expanded));
+      toggle.setAttribute("aria-label", (expanded ? "Collapse " : "Expand ") + chapter.title + " section");
+      toggle.textContent = expanded ? "COLLAPSE" : "EXPAND";
+    };
+    setChapterExpanded(initiallyExpanded);
     toggle.addEventListener("click", () => {
-      const expanded = toggle.getAttribute("aria-expanded") === "true";
-      body.hidden = expanded;
-      toggle.setAttribute("aria-expanded", String(!expanded));
-      toggle.setAttribute("aria-label", (expanded ? "Expand " : "Collapse ") + chapter.title + " section");
-      toggle.textContent = expanded ? "EXPAND" : "COLLAPSE";
+      setChapterExpanded(toggle.getAttribute("aria-expanded") !== "true");
+    });
+    // Back/forward cache restores the old DOM; reset to the expected entry state.
+    window.addEventListener("pageshow", event => {
+      if (event.persisted) setChapterExpanded(initiallyExpanded);
     });
     section.append(header, body);
     mount.append(section);
