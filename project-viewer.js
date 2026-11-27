@@ -375,18 +375,39 @@
     const meta = document.createElement("span");
     meta.className = "chapter-meta";
     meta.textContent = chapter.info;
-    header.append(title, meta);
-    section.append(header);
+    const actions = document.createElement("div");
+    actions.className = "chapter-actions";
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "chapter-toggle";
+    toggle.setAttribute("aria-expanded", "true");
+    toggle.setAttribute("aria-controls", "chapter-content-" + chapter.key);
+    toggle.setAttribute("aria-label", "Collapse " + chapter.title + " section");
+    toggle.textContent = "COLLAPSE";
+    actions.append(meta, toggle);
+    header.append(title, actions);
+
+    const body = document.createElement("div");
+    body.className = "project-document-body";
+    body.id = "chapter-content-" + chapter.key;
     if (chapter.files.length) {
       chapter.files.forEach((file, fileIndex) => {
-        section.append(createPdfReader(file, chapter.key, fileIndex));
+        body.append(createPdfReader(file, chapter.key, fileIndex));
       });
     } else {
-      showPending(section,
+      showPending(body,
         chapter.key === "models"
           ? "Model photography will appear here once its separate PDF has been provided."
           : "This document is coming soon.");
     }
+    toggle.addEventListener("click", () => {
+      const expanded = toggle.getAttribute("aria-expanded") === "true";
+      body.hidden = expanded;
+      toggle.setAttribute("aria-expanded", String(!expanded));
+      toggle.setAttribute("aria-label", (expanded ? "Expand " : "Collapse ") + chapter.title + " section");
+      toggle.textContent = expanded ? "EXPAND" : "COLLAPSE";
+    });
+    section.append(header, body);
     mount.append(section);
   }
 })();
