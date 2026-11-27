@@ -160,16 +160,6 @@
     }
   }
 
-  function showError(message) {
-    loading.hidden = true;
-    stage.hidden = true;
-    toolbar.hidden = true;
-    setState("PDF UNAVAILABLE", message);
-    openLink.hidden = false;
-    downloadLink.hidden = false;
-    state.append(openLink, downloadLink);
-  }
-
   function changePage(page) {
     if (!documentHandle || !Number.isFinite(page)) return;
     const limited = Math.max(1, Math.min(totalPages, Math.round(page)));
@@ -280,6 +270,8 @@
 
   const useNativeViewer = () => {
     // Keep the document visible if PDF.js, its worker, or canvas rendering fails.
+    ++requestId;
+    documentHandle = null;
     state.hidden = true;
     stage.hidden = false;
     toolbar.hidden = false;
