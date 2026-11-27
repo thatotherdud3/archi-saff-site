@@ -58,7 +58,9 @@
       key: "models", number: "03", title: "MODEL PHOTOGRAPHY",
       info: "PHYSICAL MODELS / STUDIES",
       files: project.modelPhotographyPdf ?
-        [{title: "MODEL PHOTOGRAPHY", path: project.modelPhotographyPdf}] : []
+        [typeof project.modelPhotographyPdf === "string"
+          ? {title: "MODEL PHOTOGRAPHY", path: project.modelPhotographyPdf}
+          : project.modelPhotographyPdf] : []
     }
   ];
 
@@ -380,16 +382,18 @@
     const toggle = document.createElement("button");
     toggle.type = "button";
     toggle.className = "chapter-toggle";
-    toggle.setAttribute("aria-expanded", "true");
+    const initiallyExpanded = chapter.key === "design";
+    toggle.setAttribute("aria-expanded", String(initiallyExpanded));
     toggle.setAttribute("aria-controls", "chapter-content-" + chapter.key);
-    toggle.setAttribute("aria-label", "Collapse " + chapter.title + " section");
-    toggle.textContent = "COLLAPSE";
+    toggle.setAttribute("aria-label", (initiallyExpanded ? "Collapse " : "Expand ") + chapter.title + " section");
+    toggle.textContent = initiallyExpanded ? "COLLAPSE" : "EXPAND";
     actions.append(meta, toggle);
     header.append(title, actions);
 
     const body = document.createElement("div");
     body.className = "project-document-body";
     body.id = "chapter-content-" + chapter.key;
+    body.hidden = !initiallyExpanded;
     if (chapter.files.length) {
       chapter.files.forEach((file, fileIndex) => {
         body.append(createPdfReader(file, chapter.key, fileIndex));
