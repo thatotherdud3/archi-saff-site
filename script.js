@@ -24,6 +24,15 @@ function pageKey(url) {
   return path + url.search;
 }
 
+// Only the four main destinations participate in the branded cross-page fade.
+const mainPages = new Set(['index.html', 'projects.html', 'inspirations.html', 'upcoming.html']);
+const siteDirectory = new URL('.', location.href).pathname;
+function isMainPage(url) {
+  if (!url.pathname.startsWith(siteDirectory)) return false;
+  const relativePath = url.pathname.slice(siteDirectory.length);
+  return relativePath === '' || mainPages.has(relativePath);
+}
+
 if (loader) {
   // Direct visits show the content straight away. Internal links fade back in.
   if (document.documentElement.classList.contains('page-transition-entering')) {
@@ -63,6 +72,10 @@ if (loader) {
     }
 
     if (!/\.html?$/i.test(destination.pathname)) return;
+
+    // Project details, case studies and other internal pages use normal navigation.
+    // This keeps the Archi/Saff interstitial strictly between the four main pages.
+    if (!isMainPage(new URL(location.href)) || !isMainPage(destination)) return;
 
     event.preventDefault();
     if (reducedMotion) {
@@ -196,8 +209,9 @@ if (!reducedMotion && matchMedia('(hover: hover) and (pointer: fine)').matches) 
       if (!initialRect) initialRect = el.getBoundingClientRect();
       const centreX = initialRect.left + initialRect.width / 2;
       const centreY = initialRect.top + initialRect.height / 2;
-      const x = Math.max(-7, Math.min(7, (event.clientX - centreX) * .14));
-      const y = Math.max(-6, Math.min(6, (event.clientY - centreY) * .14));
+      // Slightly stronger pull than before, without the exaggerated travel.
+      const x = Math.max(-10, Math.min(10, (event.clientX - centreX) * .21));
+      const y = Math.max(-8, Math.min(8, (event.clientY - centreY) * .21));
       el.style.setProperty('--mag-x', x.toFixed(1) + 'px');
       el.style.setProperty('--mag-y', y.toFixed(1) + 'px');
     });
