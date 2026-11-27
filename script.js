@@ -98,6 +98,47 @@ if (loader) {
   });
 }
 
+
+/* A restrained page fade for project links; the branded main-page transition remains intact. */
+const projectPagePath = siteDirectory + 'project.html';
+const isProjectDetail = url => url.pathname === projectPagePath;
+document.addEventListener('click', event => {
+  const link = event.target.closest('a[href]');
+  if (!link || navigating || event.defaultPrevented || event.button !== 0 ||
+      event.metaKey || event.ctrlKey || event.shiftKey || event.altKey ||
+      link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
+
+  const destination = new URL(link.href, location.href);
+  if (destination.origin !== location.origin || !/\.html?$/i.test(destination.pathname)) return;
+  if (!isProjectDetail(destination) && !isProjectDetail(new URL(location.href))) return;
+  if (pageKey(destination) === pageKey(new URL(location.href))) return;
+
+  event.preventDefault();
+  if (reducedMotion) {
+    location.assign(destination.href);
+    return;
+  }
+
+  navigating = true;
+  document.body.classList.add('soft-page-exiting');
+  try { sessionStorage.setItem('archi-saff-soft-transition', String(Date.now())); } catch (_) {}
+  navigationTimer = setTimeout(() => location.assign(destination.href), 230);
+  recoveryTimer = setTimeout(() => {
+    navigating = false;
+    document.body.classList.remove('soft-page-exiting');
+    try { sessionStorage.removeItem('archi-saff-soft-transition'); } catch (_) {}
+  }, 6500);
+});
+
+/* Restore an intact page when navigating back from the browser cache. */
+addEventListener('pageshow', event => {
+  if (!event.persisted) return;
+  navigating = false;
+  clearTimeout(navigationTimer);
+  clearTimeout(recoveryTimer);
+  document.body.classList.remove('soft-page-exiting');
+});
+
 /* Placeholder social URLs must not open an empty tab before Saff supplies links. */
 $$('a[href="#"]').forEach(link => link.addEventListener('click', event => event.preventDefault()));
 
@@ -221,20 +262,55 @@ if (!reducedMotion && matchMedia('(hover: hover) and (pointer: fine)').matches) 
   });
 }
 
-/* ---- progressive scroll reveal: content is visible if JavaScript fails ---- */
+
+/* Light scroll reveals across projects, the live Inspirations gallery, and footers.
+   No content is hidden until a working observer schedules an animation. */
 if (!reducedMotion && 'IntersectionObserver' in window) {
-  const observer = new IntersectionObserver(entries => {
+  const revealObserver = new IntersectionObserver(entries => {
     entries.forEach(entry => {
       if (!entry.isIntersecting) return;
       entry.target.classList.add('in');
-      observer.unobserve(entry.target);
+      revealObserver.unobserve(entry.target);
     });
   }, { threshold: .06, rootMargin: '0px 0px -3% 0px' });
 
-  $$('.reveal').forEach(el => {
-    // Don't conceal above-the-fold content while waiting on animation.
-    if (el.getBoundingClientRect().top <= innerHeight * .8) return;
-    el.classList.add('reveal-pending');
-    observer.observe(el);
-  });
+  const revealSelectors = [
+    '.reveal',
+    '#projects .filters',
+    '#projGrid .tile',
+    '#inspirations .filters',
+    '#inspirations .pinterest-archive-intro',
+    '#inspirations .tileset-board-shell',
+    '#inspirations .pinterest-archive-footer',
+    '#upcoming .table .trow:not(.head)',
+    '#projectDetail .project-detail-description',
+    '#projectDetail .project-document-section',
+    '#projectDetail .project-detail-bottom',
+    '.foot-band .foot-intro',
+    '.foot-band .wordmark'
+  ].join(', ');
+
+  function scheduleReveals(root) {
+    root.querySelectorAll(revealSelectors).forEach(el => {
+      if (el.classList.contains('in') || el.classList.contains('reveal-pending')) return;
+      // Keep content visible above the fold and when jumping back into a page.
+      if (el.getBoundingClientRect().top <= innerHeight * .8) return;
+      if (!el.classList.contains('reveal')) el.classList.add('reveal', 'editorial-reveal');
+      el.classList.add('reveal-pending');
+      revealObserver.observe(el);
+    });
+  }
+
+  scheduleReveals(document);
+
+  // The project-reader creates its document sections after this shared script runs.
+  const documents = document.querySelector('#projectDocuments');
+  if (documents && 'MutationObserver' in window) {
+    const documentObserver = new MutationObserver(() => {
+      scheduleReveals(documents);
+      if (documents.querySelector('.project-document-section') ||
+          !documents.querySelector('.project-documents-loading')) documentObserver.disconnect();
+    });
+    documentObserver.observe(documents, { childList: true });
+  }
 }
