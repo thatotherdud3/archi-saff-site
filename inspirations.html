@@ -22,7 +22,7 @@ try {
   }
 } catch (_) {}
 </script>
-<link rel="stylesheet" href="style.css?v=12">
+<link rel="stylesheet" href="style.css?v=13">
 <noscript><style>.page-loader{display:none!important}.reveal{opacity:1!important;transform:none!important}.mobile-menu-toggle{display:none!important}@media(max-width:860px){.nav{flex-wrap:wrap}.primary-nav{display:block!important;position:static!important;box-shadow:none!important;width:100%}.nav-links{padding:0!important}}</style></noscript>
 </head>
 <body>
@@ -67,22 +67,12 @@ try {
         <span class="index-label">01 / COLLECTED REFERENCES</span>
         <h2>AN ONGOING <em>COLLECTION.</em></h2>
       </div>
-      <p>A living collection of spaces, materials and moods. New references appear here as they are saved to Pinterest.</p>
+      <p>A changing collection of spaces, materials and moods, sourced from Pinterest and displayed through TileSet.</p>
     </div>
 
-    <!-- Temporary test board. Replace both URLs below when Saffron shares her public board. -->
-    <div class="pinterest-board-shell" id="pinterestBoardShell">
-      <a data-pin-do="embedBoard"
-         data-pin-board-width="760"
-         data-pin-scale-height="650"
-         data-pin-scale-width="116"
-         href="https://www.pinterest.com/Thatotherdud3/aestetic/"></a>
-      <div class="pinterest-embed-fallback" id="pinterestEmbedFallback" hidden>
-        <span class="index-label">PINTEREST / PREVIEW UNAVAILABLE</span>
-        <h3>THE LIVE BOARD ISN'T DISPLAYING HERE.</h3>
-        <p>Pinterest may require sign-in or restrict its embedded preview. The board can still be opened directly on Pinterest.</p>
-        <a href="https://www.pinterest.com/Thatotherdud3/aestetic/" target="_blank" rel="noopener noreferrer">OPEN BOARD ON PINTEREST ↗</a>
-      </div>
+    <!-- Temporary test gallery. Change the connected board in TileSet when Saffron shares hers. -->
+    <div class="tileset-board-shell" role="region" aria-label="Pinterest inspiration gallery">
+      <div data-tileset="w_fd933acf63bc517e9d7dfb111749fcbb"></div>
     </div>
     <div class="pinterest-archive-footer">
       <p>TEST FEED / THATOTHERDUD3 — SAFFRON'S BOARD WILL REPLACE THIS ONE.</p>
@@ -107,25 +97,6 @@ try {
 </div>
 
 <script src="script.js?v=4"></script>
-<script async defer src="https://assets.pinterest.com/js/pinit.js"></script>
-<script>
-/* Show a readable fallback when Pinterest doesn't generate a board widget.
-   Embedded content is served by Pinterest; browser-side code cannot guarantee its availability. */
-(() => {
-  const shell = document.querySelector('#pinterestBoardShell');
-  const fallback = document.querySelector('#pinterestEmbedFallback');
-  if (!shell || !fallback) return;
-  const widgetRendered = () => {
-    const frame = shell.querySelector('iframe');
-    if (frame && frame.getBoundingClientRect().height >= 160) return true;
-    return shell.querySelectorAll('img').length >= 2;
-  };
-  const check = () => { fallback.hidden = widgetRendered(); };
-  const observer = new MutationObserver(check);
-  observer.observe(shell, {childList: true, subtree: true});
-  window.addEventListener('load', () => setTimeout(check, 6500), {once: true});
-  setTimeout(() => { check(); observer.disconnect(); }, 12500);
-})();
-</script>
+<script src="https://app.tileset.com/v1/tileset.js" async></script>
 </body>
 </html>
