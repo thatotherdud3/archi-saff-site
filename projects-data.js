@@ -3,10 +3,12 @@
    Keep pdf: null until a file is available. */
 window.ArchiSaffProjects = Object.freeze([
   {
-    id: "civic-monolith", number: "001", title: "Civic Monolith",
-    category: "CULTURAL", location: "LEÓN, MX", year: "2023",
-    description: "Project description and architectural documentation will appear here when the final portfolio is supplied.",
-    pdf: "assets/pdfs/reader-demo.pdf", demo: true
+    id: "archway-markets", number: "001", title: "Archway Markets",
+    category: "CULTURAL", location: "LIVERPOOL, UK", year: "TBC",
+    description: "Timber Shop is a site-responsive marketplace proposal near St Peter's Tavern on Seel Street in Liverpool. Arched timber construction echoes the existing historic facade, while flexible pop-up stalls and carefully considered natural and artificial lighting support a community market throughout the day and evening. The accompanying technical board explores the glulam structure, materials, an exploded isometric and 1:10 prototype models.",
+    // Prepared two-page file: assets/pdfs/archway-markets.pdf
+    // Keep null until the actual PDF has been uploaded to the repository.
+    pdf: null, demo: false
   },
   {
     id: "hillside-house", number: "002", title: "Hillside House",
