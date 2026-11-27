@@ -900,3 +900,10 @@ main.page{padding-left:var(--page-gutter);padding-right:var(--page-gutter);}
   .pinterest-archive-intro h2{font-size:clamp(1.6rem,6.5vw,2.4rem);}
   .pinterest-board-link{font-size:.69rem;}
 }
+
+/* Mobile TileSet image grid: two sizeable cards per row, desktop unchanged. */
+@media(max-width:600px){
+  #inspirations .tileset-board-shell [data-archisaff-photo-grid]{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
